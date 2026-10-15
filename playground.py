@@ -77,9 +77,8 @@ import tools
 import openai
 from pathlib import Path
 
-# GPT keys
-key = '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'
-client = openai.OpenAI(api_key=key)
+# Reads OPENAI_API_KEY from the environment.
+client = openai.OpenAI()
 
 
 i = 1

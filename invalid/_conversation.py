@@ -1,7 +1,6 @@
 import openai
 
-api_key = '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'
-client = openai.OpenAI(api_key=api_key)
+client = openai.OpenAI()
 starting_message = "can you help me?"
 
 # input_message = starting_message
