@@ -14,9 +14,8 @@ import soundfile as sf
 
 pygame.mixer.init(channels=2)
 
-# GPT keys
-key = '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'
-client = openai.OpenAI(api_key=key)
+# Reads OPENAI_API_KEY from the environment.
+client = openai.OpenAI()
 
 org_speech_file_path = Path(__file__).parent / "voices/speech.wav"
 higher_speech_file_path = Path(__file__).parent / "voices/speech_2.wav"

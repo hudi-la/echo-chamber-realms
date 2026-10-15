@@ -1,7 +1,6 @@
 import openai
 
-api_key = ''
-client = openai.OpenAI(api_key=api_key)
+client = openai.OpenAI()
 
 
 if __name__ == '__main__':
@@ -21,8 +20,7 @@ if __name__ == '__main__':
 from pathlib import Path
 from openai import OpenAI
 
-key = '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'
-client = OpenAI(api_key=key)
+client = OpenAI()
 
 speech_file_path = Path(__file__).parent / "speech.wav"
 response = client.audio.speech.create(
