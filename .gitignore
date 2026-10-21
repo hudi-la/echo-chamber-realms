@@ -3,3 +3,26 @@
 .env
 .env.*
 !.env.example
+
+.venv/
+state/
+__pycache__/
+*.pyc
+.DS_Store
+state-*/
+
+# Independent English runtime memory
+state-en/
+
+artifacts/
+voices/audition/
+voices/speech*.wav
+legacy/ConversationSample.txt
+legacy/history
+legacy/history_may
+legacy/invalid/doctor.txt
+.aws/
+.credentials/
+
+# Historical planning documents retained locally, outside this integration scope
+docs/superpowers/
