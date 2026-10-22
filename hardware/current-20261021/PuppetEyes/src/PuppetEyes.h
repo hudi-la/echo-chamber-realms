@@ -14,6 +14,7 @@ enum class Speed : uint8_t { Fast, Smooth };
 class PuppetEyes {
 public:
   void begin();
+  void head(int microseconds);
   // 每次 loop 必须调用；正常动作不使用 delay，不妨碍其他代码工作。
   void update();
   // 同一角色忙碌时返回 false，不插队。不同角色可独立调用。

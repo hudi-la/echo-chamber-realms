@@ -47,10 +47,7 @@ void PuppetEyes::writeEyes(uint8_t p) {
 
 void PuppetEyes::begin() {
   if (ready) return;
-  for (uint8_t pin = 11; pin <= 13; pin++) {
-    digitalWrite(pin, LOW);
-    pinMode(pin, OUTPUT);
-  }
+  // Relay pins are configured by the serial sketch only after polarity is known.
   // 启动时先启用眼皮全开，再启用眼球回正。仅初始化包含等待。
   for (uint8_t p = 0; p < 3; p++) {
     const Calibration &c = CAL[p];
@@ -166,4 +163,8 @@ void PuppetEyes::update() {
       case Idle: break;
     }
   }
+}
+
+void PuppetEyes::head(int microseconds) {
+  if (ready) motors[10].writeMicroseconds(constrain(microseconds, 1500, 1650));
 }

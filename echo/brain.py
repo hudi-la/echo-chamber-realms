@@ -60,11 +60,32 @@ DECISION_SCHEMA = {
     "required": ["speak"], "additionalProperties": False,
 }
 
+class PerformedLine(str):
+    def __new__(cls, text, performance=None):
+        obj = super().__new__(cls, text)
+        obj.performance = performance or {}
+        return obj
+
+
+PERFORMANCE_ASK = """
+Return text plus performance metadata. target is the person directly addressed:
+audience, Charlie, Lucy, or Kaka. tone is neutral, curious, hesitant, emphatic,
+or excited. body is true only for a brief meaningful emphasis, not every line.
+Choose from the character's intent and context; do not put stage directions in spoken text.
+"""
 LINE_SCHEMA = {
     "type": "object",
-    "properties": {"text": {"type": "string", "minLength": 1}},
-    "required": ["text"],
-    "additionalProperties": False,
+    "properties": {
+        "text": {"type": "string", "minLength": 1},
+        "performance": {
+            "type": "object", "properties": {
+                "target": {"type": "string", "enum": ["audience", "Charlie", "Lucy", "Kaka"]},
+                "tone": {"type": "string", "enum": ["neutral", "curious", "hesitant", "emphatic", "excited"]},
+                "body": {"type": "boolean"},
+            }, "required": ["target", "tone", "body"], "additionalProperties": False,
+        },
+    },
+    "required": ["text", "performance"], "additionalProperties": False,
 }
 
 RUMINATION_SCHEMA = {
@@ -106,7 +127,8 @@ def parse_decision(text: str) -> Decision:
 
 
 def parse_line(text: str) -> str:
-    return str(json.loads(text).get("text", "")).strip()
+    data = json.loads(text)
+    return PerformedLine(str(data.get("text", "")).strip(), data.get("performance"))
 
 
 def parse_rumination(text: str) -> Rumination:
@@ -164,7 +186,7 @@ class ClaudeBrain:
             return SILENT
 
     async def compose(self, system: str, situation: str, decision: Decision) -> str:
-        ask = situation + "\n\n" + catalog(getattr(self, "language", "zh"))["compose"]
+        ask = situation + "\n\n" + catalog(getattr(self, "language", "zh"))["compose"] + PERFORMANCE_ASK
         text = await self._json(self.model, system, ask, LINE_SCHEMA, 800)
         if text is None:
             return ""
@@ -243,7 +265,7 @@ class OpenAIBrain:
             return SILENT
 
     async def compose(self, system: str, situation: str, decision: Decision) -> str:
-        ask = situation + "\n\n" + catalog(getattr(self, "language", "zh"))["compose"]
+        ask = situation + "\n\n" + catalog(getattr(self, "language", "zh"))["compose"] + PERFORMANCE_ASK
         text = await self._json(self.model, system, ask, LINE_SCHEMA, "line", 1500)
         if text is None:
             return ""

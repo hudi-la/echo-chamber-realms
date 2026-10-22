@@ -7,3 +7,6 @@ state-*/
 
 # Independent English runtime memory
 state-en/
+
+# Local implementation tools and isolated dependency environments
+work/

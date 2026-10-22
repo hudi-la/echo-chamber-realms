@@ -138,7 +138,7 @@ class Puppet:
             self.speaking = False
             self.log(f"  ({self.name} 还没说出口就被打断了)")
             return
-        text = text.strip() if isinstance(text, str) else ""
+        text = type(text)(text.strip(), text.performance) if hasattr(text, "performance") else (text.strip() if isinstance(text, str) else "")
         if not re.search(r"\w", speakable(text)):
             self.room.floor.release(self.name)
             self.speaking = False

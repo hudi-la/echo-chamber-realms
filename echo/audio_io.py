@@ -76,6 +76,10 @@ class BrowserPlayer:
             self._failure = "audio browser disconnected"
         self._active = False
 
+    @property
+    def playback_started(self):
+        return self._started is not None
+
     def progress(self):
         if self._started is None:
             return 0.0

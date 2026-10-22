@@ -134,6 +134,7 @@ class TtsMouth:
         self._ack: asyncio.Event | None = None
         self._prefix = ""
         self.recent = _Recent()
+        self.performance = None
 
     async def _prepare(self, name: str, sentence: str) -> Audio | None:
         text = speakable(sentence)
@@ -177,8 +178,18 @@ class TtsMouth:
                     duration = max(len(pcm) / sr, 0.05)
                     self.recent.begin(sentence)
                     self.player.play(pcm, sr, self.pan.get(name, (0.5, 0.5)))
-                    while self.player.busy() and not self._stop_evt.is_set():
-                        await asyncio.sleep(0.03)
+                    acting = False
+                    try:
+                        while self.player.busy() and not self._stop_evt.is_set():
+                            if self.performance and not acting and getattr(self.player, "playback_started", True):
+                                acting = True
+                                self.performance.start(name, text, i, duration)
+                            if self.performance and acting:
+                                self.performance.tick()
+                            await asyncio.sleep(0.03)
+                    finally:
+                        if self.performance:
+                            self.performance.stop()
                 if self._stop_evt.is_set():
                     frac = (self.player.progress() if audio is not None and hasattr(self.player, "progress")
                             else min((time.monotonic() - started) / duration, 1.0))

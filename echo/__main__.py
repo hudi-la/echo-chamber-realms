@@ -114,6 +114,11 @@ async def main_async(config_path: Path, fake: bool, reset: list[str] | None = No
         mouth = TtsMouth(synth, player, c.pan)
     else:
         mouth = PrintMouth(clock)
+    from .performance import Performance, SerialStage
+    stage = SerialStage(os.environ.get("ECR_SERIAL_PORT"), os.environ.get("ECR_RELAY_ACTIVE"))
+    performance = Performance(stage)
+    if isinstance(mouth, TtsMouth):
+        mouth.performance = performance
     motors = PrintMotors()
     changelog = ChangeLog(c.state_dir / "changes.jsonl")
     sessions = c.state_dir / "sessions.jsonl"
@@ -125,6 +130,7 @@ async def main_async(config_path: Path, fake: bool, reset: list[str] | None = No
         for sink in sinks:
             sink(line)
 
+    stage.out = log
     from .prompts import catalog, persona
     puppets = []
     for name in NAMES:
@@ -165,6 +171,19 @@ async def main_async(config_path: Path, fake: bool, reset: list[str] | None = No
         log("[启动] 等待声音页面就绪；尚未开始生成或播放台词。")
         await monitor.audio_ready.wait()
         monitor.waiting_for_audio = False
+    from .events import HumanStarted
+    action_events = room.subscribe()
+    async def stage_events():
+        while True:
+            stage.poll()
+            while not action_events.empty():
+                event = action_events.get_nowait()
+                if isinstance(event, HumanStarted):
+                    performance.stop()
+                    for name in NAMES:
+                        stage.look(name, 0)
+            await asyncio.sleep(.03)
+    background.append(asyncio.create_task(stage_events()))
     await room.wake(day)
     background += [asyncio.create_task(room.run())] + [asyncio.create_task(p.run()) for p in puppets]
     if monitor is not None and browser_audio and c.mouth == "tts":
@@ -194,6 +213,8 @@ async def main_async(config_path: Path, fake: bool, reset: list[str] | None = No
         await Console(room).run()
     finally:
         await mouth.stop()
+        performance.stop()
+        stage.close()
         for name in NAMES:
             await motors.silent(name)
         for t in background:

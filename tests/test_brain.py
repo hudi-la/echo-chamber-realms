@@ -82,7 +82,7 @@ async def test_openai_brain_compose_uses_line_schema_and_decision():
     line = await b.compose("你是Kaka。", "(现在) 没人在说。", Decision(True, feeling="兴奋", intent="让他们看我"))
     assert line == "当然是我。"
     call = stub.responses.calls[0]
-    assert call["text"]["format"]["schema"]["required"] == ["text"]
+    assert call["text"]["format"]["schema"]["required"] == ["text", "performance"]
     assert call["input"].startswith("(现在) 没人在说。")
     assert COMPOSE_ASK in call["input"]
     assert "兴奋" not in call["input"] and "让他们看我" not in call["input"]
