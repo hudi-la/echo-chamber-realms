@@ -21,3 +21,9 @@ Arduino Uno 115200；READY ECR1 握手；LOOK 角色(鸟0/鼠1/狗2) 方向(与G
 D12鸟，D13狗。2026-10-21已从旧程序puppet_gpt_project确认HIGH启动、LOW停止；固件setup先将D12/D13输出LOW，运行时仍需CONFIG启用身体。没有位置反馈，不保证直流机构停在固定位置。身体最长1.2秒，失联1.8秒关闭；Python每0.5秒发心跳。老鼠点头只在1500–1650微秒的小范围往返，尚待实物确认。
 
 继电器电平已按旧程序确认；不自动启动真实付费语音会话。实际串口端口可能改变，固定演示可以Ctrl-C停止。
+
+## 有声固定台词演示
+
+`python -m echo.performance_preview --prepare` 使用当前三角色音色、移调和播放速度，调用TTS生成三句缓存音频到work/performance-audio，不启动房间或修改角色记忆。
+准备完成后：`python -m echo.performance_preview --countdown 10`，先10秒倒数，再通过电脑默认音频输出播放并同步串口动作。默认使用已确认的HIGH继电器和/dev/cu.usbmodem1401，可用参数修改。狗短暂起伏、老鼠只做眼神、鸟抖动一秒。该演示使用本机pygame播放，无浏览器播放确认；动作以本机播放开始为基准，不代表逐词精确同步。
+需要pygame、soundfile及现有TTS依赖。Ctrl-C或异常会停止声音和身体，缓存可反复试听而无需再次合成。
