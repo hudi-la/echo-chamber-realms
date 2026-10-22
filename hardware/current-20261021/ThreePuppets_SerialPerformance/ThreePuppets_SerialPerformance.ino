@@ -40,7 +40,9 @@ void command(char *s) {
 }
 void setup() {
   Serial.begin(115200);
-  // No relay outputs until CONFIG specifies the installed relay polarity.
+  // Installed relays: HIGH=on, LOW=off, verified against puppet_gpt_project.
+  digitalWrite(12, LOW); pinMode(12, OUTPUT);
+  digitalWrite(13, LOW); pinMode(13, OUTPUT);
   eyes.begin(); contact=millis(); Serial.println("READY ECR1");
 }
 void loop() {
