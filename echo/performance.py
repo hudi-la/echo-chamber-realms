@@ -90,9 +90,9 @@ class Performance:
         self.stage.look(name, gaze(name, target), self.rng.random() < .35,
                         tone == 'hesitant' and duration > 3)
         self.active = dict(name=name, at=self.now(), duration=duration, target=target,
-                           tone=tone, listeners=False, shifted=False, returned=False)
-        if sentence == 0 and info.get('body') is True:
-            self.stage.body(name, min(1000, max(150, int(duration * 500))))
+                           tone=tone, shifted=False, returned=False)
+        # A brief body cue identifies the current speaker on every sentence.
+        self.stage.body(name, min(1000, max(150, int(duration * 500))))
 
     def tick(self):
         self.stage.poll()
@@ -100,11 +100,6 @@ class Performance:
         if not a:
             return
         elapsed = self.now() - a['at']
-        if elapsed > .4 and not a['listeners']:
-            a['listeners'] = True
-            for listener in NAMES:
-                if listener != a['name']:
-                    self.stage.look(listener, gaze(listener, a['name']))
         # Only long hesitant lines avert and return, leaving time for each movement.
         if a['tone'] == 'hesitant' and a['duration'] > 7:
             if elapsed > 2.6 and not a['shifted']:

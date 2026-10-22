@@ -180,8 +180,6 @@ async def main_async(config_path: Path, fake: bool, reset: list[str] | None = No
                 event = action_events.get_nowait()
                 if isinstance(event, HumanStarted):
                     performance.stop()
-                    for name in NAMES:
-                        stage.look(name, 0)
             await asyncio.sleep(.03)
     background.append(asyncio.create_task(stage_events()))
     await room.wake(day)

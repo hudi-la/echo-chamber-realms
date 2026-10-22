@@ -70,7 +70,7 @@ class PerformedLine(str):
 PERFORMANCE_ASK = """
 Return text plus performance metadata. target is the person directly addressed:
 audience, Charlie, Lucy, or Kaka. tone is neutral, curious, hesitant, emphatic,
-or excited. body is true only for a brief meaningful emphasis, not every line.
+or excited. body describes emphasis intent; the controller currently gives every speaker a brief identification movement.
 Choose from the character's intent and context; do not put stage directions in spoken text.
 """
 LINE_SCHEMA = {

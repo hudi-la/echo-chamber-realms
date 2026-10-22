@@ -39,7 +39,7 @@ def test_metadata_is_not_spoken_and_legacy_text_works():
     assert parse_line('{"text":"旧台词"}') == '旧台词'
 
 
-def test_listeners_wait_and_body_only_once_per_turn():
+def test_only_speaker_moves_and_each_sentence_has_body_cue():
     clock = [0.]
     stage = Stage()
     director = Performance(stage, now=lambda: clock[0])
@@ -48,9 +48,13 @@ def test_listeners_wait_and_body_only_once_per_turn():
     assert len([c for c in stage.commands if isinstance(c, tuple) and c[0]=='look']) == 1
     clock[0] = .5
     director.tick()
-    assert len([c for c in stage.commands if isinstance(c, tuple) and c[0]=='look']) == 3
+    looks = [c for c in stage.commands if isinstance(c, tuple) and c[0]=='look']
+    assert len(looks) == 1
+    assert all(c[1] == 'Charlie' for c in looks)
     director.start('Charlie', line, 1, 4)
-    assert len([c for c in stage.commands if isinstance(c, tuple) and c[0]=='body']) == 1
+    bodies = [c for c in stage.commands if isinstance(c, tuple) and c[0]=='body']
+    assert len(bodies) == 2
+    assert all(c[1] == 'Charlie' for c in bodies)
 
 
 async def test_audio_ack_gates_actions_and_failure_clears_them():
