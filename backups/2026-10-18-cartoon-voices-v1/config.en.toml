@@ -1,0 +1,88 @@
+state_dir = "state-en"
+
+# Prompt language and voice delivery; restart to switch languages.
+[prompts]
+language = "en"
+
+# 回音室 · 旋钮。改数字，下一轮生效，不用重启。
+
+[model]
+auth = "subscription"             # 脑子用 ChatGPT 订阅；不会自动回退收费 API。api = 原方式
+subscription_profile = "default" # python -m echo.subscription login --profile default
+provider = "openai"               # openai | anthropic（换家要配对应的 key：OPENAI_API_KEY / ANTHROPIC_API_KEY）
+puppet = "gpt-6.1-sol"                # anthropic 用 "claude-opus-5"
+puppet_effort = "low"             # gpt-6.1-sol 最低支持 low；不支持 none。 / Minimum supported effort: low (not none).
+ruminate = "gpt-6.1-sol"
+alt = "gpt-5-mini"                # 对照档
+use_alt = false
+
+[persona]
+dir = "charactor_setting/v2"      # 人设文件夹。v2 = 按"感受 / 想法 / 策略"重写的草稿；"charactor_setting" = 原版
+
+[room]
+turn_window = 0                   # 程序同轮选人，无模型开口判断或定时候选等待；重启生效
+window = 24                       # 木偶看到的现场记录条数
+quiet_interval_with_visitor = 3   # 秒。有人时，安静多久算"安静"
+quiet_interval_alone = 120        # 秒。没人时 —— 这就是自聊的节奏
+visitor_timeout = 75              # 秒。房间"真正安静"（没人也没木偶在说）累计多久算人走了；人在听木偶说话时不计
+visitor_hard_timeout = 300        # 秒。保底：不管中间发生什么，这么久没有人声就算走了
+
+[memory]
+ruminate_every = 30               # 每听到几句反刍一次（计数存盘，重启接着数）
+# 信念不按次数限速：只因"有分量的事"而变（有人付出代价 / 在压力下仍然做了 / 反复一致 / 亲身经历），
+# 每处改动必须带理由，理由写进 state/changes.jsonl。见 echo/puppet.py 的 RUMINATE_ASK
+bedtime_min_heard = 8             # 关机前的"睡前整理"至少要听够这么多句才做，随便两句就关机不算
+belief_capacity = 6
+unspoken_keep = 8
+
+[audio]
+io = "browser"                    # browser = 麦克风和扬声器都走监控台页面（浏览器自带回声消除，需在页面上点"音频：开"）
+                                  # local   = 本机麦克风 + pygame 扬声器（没有回声消除，木偶会被自己的声音打断）
+
+[presence]
+source = "none"                   # "有没有人"的来源。none = 没有可靠来源，木偶不被告知，人声猜测只在幕后管节奏和落星
+                                  # 以后接上硬件（压力垫 / 摄像头 / 感应器）改成对应名字，"来了/走了"才作为事实进木偶的现场
+
+[monitor]
+port = 8765                       # 作者监控台 http://127.0.0.1:8765 ；0 = 关闭
+
+[ears]
+mode = "realtime"                 # console = 只用键盘 | realtime = 麦克风 + 实时转写（键盘同时保留）
+pause_grace = 1.2                # VAD 停声之后额外等待，继续开口则合并为同一人类话轮
+transcript_timeout = 8.0          # 停声后转写失败/缺失的等待上限，不截断持续说话
+activity_timeout = 12.0          # 没有新的语音活动证据时释放失联的话轮
+model = "gpt-4o-transcribe"
+language = "en"
+silence_ms = 600                  # VAD 分段；不直接释放人类发言权，另等 pause_grace
+interrupt = "confirm"             # confirm = 木偶说话时凭"听出了什么字"打断（约半秒）；immediate = 一有声音就打断（只在麦克风听不见扬声器时用）
+min_chars = 2                     # 安静时短回应阈值；播放期至少四字，停/等一下等指令除外
+vad_threshold = 0.7               # 服务端判"有人声"的门槛，0~1，越高越不容易被噪音触发
+gate_factor = 3.0                 # 木偶播放期间，麦克风要比"漏音"响这么多倍才算有人插话
+gate_floor = 400                  # 木偶播放期间放行的最低响度（int16 RMS）
+# device = "MacBook Pro Microphone"   # 不填 = 系统默认输入设备
+
+[mouth]
+mode = "tts"                      # off | tts
+model = "gpt-4o-mini-tts"         # 或 tts-1
+
+[mouth.voices]                    # 卡通配音第一版：底色 + 风格提示 + 移调
+Charlie = "nova"
+Kaka = "echo"
+Lucy = "shimmer"
+
+[mouth.pitch]                     # 角色各自的小幅移调半音数；待真实试听校准
+Charlie = 3
+Kaka = 3
+Lucy = 2
+
+[mouth.pan]                       # [左, 右] 音量：Charlie 全左、Kaka 全右、Lucy 居中
+Charlie = [1.0, 0.0]
+Kaka = [0.0, 1.0]
+Lucy = [0.5, 0.5]
+
+# Voice instructions live in prompts/zh.json and prompts/en.json.
+
+[motors]
+mode = "off"                      # off | serial（阶段 4）
+port = "/dev/cu.usbserial-1130"
+baud = 9600

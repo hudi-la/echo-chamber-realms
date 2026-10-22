@@ -1,0 +1,37 @@
+PuppetEyes 三角色眼睛驱动
+2026-10-20
+
+文件结构：src/PuppetEyes.h 为调用接口；src/PuppetEyes.cpp 为接线、行程和动作实现。
+驱动已链接到 Arduino IDE 默认 libraries 目录，其他草图可直接 #include <PuppetEyes.h>。
+
+调用示例：
+#include <PuppetEyes.h>
+PuppetEyes eyes;
+void setup() {
+  eyes.begin();
+  eyes.look(Puppet::Bird, Gaze::UpperLeft, Blink::Yes, Speed::Fast);
+}
+void loop() { eyes.update(); }
+
+一句动作调用：
+eyes.look(Puppet::Dog, Gaze::Left, Blink::No, Speed::Smooth);
+角色：Puppet::Bird / Mouse / Dog。
+方向：Gaze::Center / Left / Right / Up / Down / UpperLeft / UpperRight / LowerLeft / LowerRight。
+是否眨眼：Blink::Yes / No。
+速度：Speed::Fast（直接发位置）/ Smooth（眼球1.2秒缓动）。
+每次loop要调用eyes.update()。eyes.look()成功返回true，同一角色忙时返回false、不排队；eyes.isBusy()查询是否有角色在动，eyes.isBusy(Puppet::Bird)只查询鸟。
+三个角色可独立调用；示例演示为一次一个角色，便于观察。
+begin()启动时先开眼皮再回正，含1.6秒等待；正常动作使用millis状态机，不阻塞loop。
+动作完成表示指令时间已结束，没有舵机位置反馈。快速模式也包含400毫秒到位等待。
+
+视角统一以木偶本人为准：木偶的左 = 面对木偶的观众右。
+鸟左2050/右1050，上2150/下1105；狗左2000/右900，上1900/下1100；老鼠左1300/右1650。
+老鼠只有左右眼球，上下方向降为平视，对角方向只保留左右，抬头舵机D10保持1500。
+原左/右眼皮接线标签不随视线命名改变。
+仰视中保持眼皮全开；从仰视开始眨眼前先开眼保持、回平视，再闭眼。
+目前使用已记录的单轴端点；随机组合仍需现场观察验证。
+驱动只控制11路舵机；D12/D13保持LOW，不执行直流电机动作。
+
+随机演示：ThreePuppets_RandomNaturalDemo。
+上电自动持续播放。每轮打乱12张卡，让每个角色都展示四种眨眼/速度组合；视线和停留时间随机，同一角色避免连续选择同一视线。
+串口115200：P 暂停（当前动作完成后保持位置）；G 继续；T 当前动作完成后重新洗牌。

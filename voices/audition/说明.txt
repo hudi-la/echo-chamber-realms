@@ -1,0 +1,3 @@
+每个文件名 = 角色-音色。都是 gpt-4o-mini-tts 用文字描述语气、不升调；
+Kaka-onyx-原版升调6 = 现在实际在用的声音（onyx 升 6 个半音）；
+Kaka-realtime-ash = gpt-realtime-2 直接出声的版本，台词在同名 .txt 里。
