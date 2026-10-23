@@ -1,13 +1,77 @@
 # Echo Chamber Realms 提示词总表
-# 末尾 trial 分区供 A/B 试验使用，正式运行不会自动使用；trial.questions 只供旧固定问答测试使用。
-# 这是运行程序读取的唯一提示词正文文件。修改后保存为 UTF-8，重启程序生效。
-# 修改各个 [分区名] 下方的正文，保留分区名。空的 history 分区可以直接写入个人历史。
-# identity 身份 / history 个人历史 / strategy 惯常策略 / environment 环境 / initial_beliefs 初始信念。
-# initial_beliefs 每行一条，以 - 开头；最多六条。已有运行记忆不会因修改初始信念而直接改写。
-# compose 台词任务 / ruminate 反刍任务 / voices 配音 / performance 表演元数据。
-# 保留模板中的 {identity} {history} {strategy} {environment} 及反刍中的 {impression_ask} {capacity}。
-# zh 为中文版本，en 为英文版本。两者独立编辑。JSON 输出格式仍由代码约束。
-# 本次搬迁保留正式版本原文；先前 A/B 自由对话的临时历史没有自动确立为正式设定。
+#
+# 【怎么编辑】
+# 这里只编辑每个 [分区名] 下方的正文；保留分区名。保存为 UTF-8，重启程序后生效。
+# 本文件开头这些以 # 开头的说明不会发送给模型。不要把说明插入正文分区，那里会作为正文读取。
+# zh 是中文版本，en 是英文版本；由 config.toml / config.en.toml 的 prompts.language 选择。
+# 下文省略 zh. / en. 前缀；<名字> 指 Charlie、Lucy、Kaka，三位各自独立读取。
+# 各分区不是整份一起发给模型，而是按下面的用途分别拼接。不能删除停用分区，当前解析器仍检查其存在。
+#
+# 【现在真正怎么运行】
+# 程序选发言者 → 只给获选角色调用 compose → 播放其台词 → 其他角色收到实际说出的内容后接话。
+# 目前不调用 decide，不生成 feeling / intent，也没有先写一段内心独白再写台词的步骤。
+# 写台词时：背景 = persona_template 展开的角色资料 + belief_heading + 运行记忆中的当前信念；
+# 本次输入 = recent_heading + 最近现场记录 + compose + performance。
+# 反刍时：使用相同的角色背景与当前信念，但本次输入换成待处理的实际经历和 ruminate 等分区。
+# 实际现场记录、运行记忆、发言选择规则和 JSON schema 由程序提供，不是本 TXT 的固定提示词。
+#
+# 【使用中：角色背景，写台词和反刍都会收到】
+# persona_template：角色资料的组装模板。读取：echo/prompts.py 的 persona()。
+#   保留 {identity}、{history}、{strategy}、{environment}；调整这里会改变背景的标题及顺序。
+# personas.<名字>.identity：身份，填入模板的 identity。
+# personas.<名字>.history：个人历史，填入模板的 history；可以为空，写入后会随角色背景发送。
+# personas.<名字>.strategy：惯常策略，填入模板的 strategy。
+# personas.<名字>.environment：环境及其他设定，填入模板的 environment；酒吧街、工业区等内容在这里改。
+# 上述资料启动时由 echo/__main__.py 为各角色载入，再由 echo/puppet.py 的 system_prompt() 使用。
+# belief_heading：当前信念之前的标题；echo/puppet.py 的 system_prompt() 使用。
+#   标题后面的内容来自该角色运行记忆中的 beliefs，不是每次直接复制 initial_beliefs。
+#
+# 【使用中：初始信念，仅初始化空白记忆时装入】
+# personas.<名字>.initial_beliefs：echo/puppet.py 的 seed_if_blank() 读取，直接写入记忆，不调用模型生成。
+#   每行一条，以 - 开头，最多六条。修改不会直接覆盖已经存在的信念。
+#   当前 config.toml 的 memory.reset_on_start=true：正常启动会备份并重置旧记忆，因此重新装入这些初始信念。
+#   如果以后设为 false，已有记忆会继续使用；这时只改此分区不会更新已有角色的信念。
+#
+# 【使用中：生成台词】
+# recent_heading：最近现场记录之前的标题；echo/puppet.py 的 situation() 使用。
+# compose：获选角色本轮写台词的任务；echo/brain.py 的 compose() 使用。获选者必须给出可朗读台词。
+# performance：同一次 compose 请求附加的表演元数据要求，由 echo/brain.py 使用。
+#   让模型返回 target / tone / body 等字段；不是内心独白，也不是配音声音要求，不应被朗读。
+#
+# 【条件使用中：反刍，仅在触发反刍时发送，不随每句台词发送】
+# ruminate：回顾实际经历、提出信念变化、同伴看法及访客印象的任务；echo/puppet.py 的 ruminate() 使用。
+#   保留 {impression_ask}、{capacity}，分别由下方场景要求和配置中的信念容量填入。
+# experience_heading：自上次成功反刍以来、尚未处理的实际对话之前的标题。
+# context_heading：本次反刍场景之前的标题。
+# daily：普通累计对话触发时的场景文字。
+# end：访客离场触发时的场景文字。
+# bedtime：关机前整理触发时的场景文字（只有符合待处理经历及计数条件才调用）。
+# impression：访客离场反刍时填入 {impression_ask}，要求记录本次访客印象。
+# no_impression：普通反刍及关机整理时填入 {impression_ask}，要求访客印象留空。
+# 当前触发包括：累计听到 memory.ruminate_every 条、一次到访结束、符合条件的关机整理。
+# 信念变化会进入后续背景；同伴看法和访客印象目前只保存，不回填给下一次台词或反刍请求。
+#
+# 【条件使用中：声音合成】
+# voices.<名字>：由 echo/config.py 载入，echo/mouth.py 的 OpenAISynth 交给 TTS 演绎已生成台词。
+#   只影响声音表演，不作为角色脑子生成台词的背景。mouth.mode=off 的纯文本运行不会调用 TTS。
+#   echo/voice_preview.py 的声音试听也会使用；音色名、移调和播放速度等参数仍在 config 文件中。
+#
+# 【主流程未使用：旧版兼容保留】
+# decide：原先供模型判断要不要开口的任务。函数仍在 echo/brain.py，但当前主流程不调用。
+#   修改这段不会影响当前正常对话，也不会影响最近两次三木偶自由对话。
+#
+# 【仅 A/B 试验使用，正常启动不会自动读取为角色历史】
+# trial.history：A、B 共用的临时历史；试验时替换 personas.<名字>.history，尚未确立为正式设定。
+# trial.a_boundary：只在 A 试验中追加到 environment；B 不追加这一条经验边界要求。
+# trial.questions：旧固定问答试验的预设观众问题，echo/history_trial.py 才会读取。
+#   这个旧问答入口会生成带预设观众问题的测试；不是用户最近要求的三木偶自由对话。
+#   最近的自由对话脚本 work/group-a/run.py、work/group-b/run.py 只使用 trial.history 及 A 的边界要求，
+#   不使用 trial.questions，也不加入观众台词；仍由 Room / Floor / Puppet 组织三个角色自行接话。
+#
+# 【维护】
+# 以前的中英文 JSON 已移到 backups/2026-10-22-before-prompts-txt，只作备份，不作为运行提示词来源。
+# 修改本 TXT 后即可重启使用；要同步生成参考文档，运行 python -m echo.prompt_docs。
+# 提示词正文与代码要求的输出字段有对应关系，JSON 输出结构仍由代码校验。
 
 [zh.decide]
 现在是否有你要说的话？
