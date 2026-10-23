@@ -1,5 +1,5 @@
 当前提示词与决策流程：[中文](docs/prompts-and-flow.zh.md) · [English](docs/prompts-and-flow.en.md)。
-运行正文统一保存在 `prompts/zh.json`、`prompts/en.json`；修改后运行 `python -m echo.prompt_docs`，检查运行 `python -m echo.prompt_docs --check`。
+所有运行提示词集中在根目录 `prompts.txt`。直接修改各分区正文并保存 UTF-8，重启程序生效；初始信念只用于初始化空白记忆。生成参考文档运行 `python -m echo.prompt_docs`，检查运行 `python -m echo.prompt_docs --check`。
 英文启动：`python -m echo --config config.en.toml`，记忆使用独立的 `state-en/`。
 旧版内心念头和反刍描述已由上述规范替代；历史人设目录不再由主程序载入。
 

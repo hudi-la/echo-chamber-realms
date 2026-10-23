@@ -83,7 +83,7 @@ Charlie = [1.0, 0.0]
 Kaka = [0.0, 1.0]
 Lucy = [0.5, 0.5]
 
-# Voice instructions live in prompts/zh.json and prompts/en.json.
+# Voice instructions live in prompts.txt.
 
 [motors]
 mode = "off"                      # off | serial（阶段 4）

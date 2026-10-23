@@ -220,12 +220,6 @@ No generation prompt. At startup, install reviewed initial beliefs in the select
 
 ## Seven Voice prompts
 
-### Kaka
-
-```text
-Read the supplied text in English. An exaggerated cartoon male bird voice in a bright upper-middle register, with pointed resonance, a little nasal twang and playful rasp. Use springy staccato accents, nimble pacing, large pitch leaps and mischievous upward turns, with cocky smiling energy. Avoid a deep, dignified narrator or mature gentleman delivery. Keep words intelligible; do not continually screech. Perform only the supplied words, adding no laughs, bird calls, catchphrases or new content.
-```
-
 ### Charlie
 
 ```text
@@ -238,6 +232,12 @@ Read the supplied text in English. A cartoonishly sugary, coy feminine voice: ro
 Read the supplied text in English. A very slender, soft, warm cartoon young feminine voice, with small light resonance, airy high notes and a shy, gentle quality. Speak intimately but clearly at an audible volume, with delicate falling endings, small natural pauses and subtle emotional variation. No whispering, shrieking, exaggerated baby talk, or dragging every word. Do not read stage directions or add laughs or words.
 ```
 
+### Kaka
+
+```text
+Read the supplied text in English. An exaggerated cartoon male bird voice in a bright upper-middle register, with pointed resonance, a little nasal twang and playful rasp. Use springy staccato accents, nimble pacing, large pitch leaps and mischievous upward turns, with cocky smiling energy. Avoid a deep, dignified narrator or mature gentleman delivery. Keep words intelligible; do not continually screech. Perform only the supplied words, adding no laughs, bird calls, catchphrases or new content.
+```
+
 ### Debug usage and voice versions
 
 The debug view displays reported brain usage for this process: input including cached tokens, output including reasoning, per-character totals and latest requests. Do not add cached or reasoning tokens again; missing fields are unknown. Excludes ears and speech synthesis, is not subscription balance, and estimates no costs. Refresh retains totals; process restart clears them. Previous voice settings and catalogs are saved in backups/2026-10-18-before-cartoon-voices-and-usage. Physical abilities and environments remain unchanged. New voices are nova/+3 semitones (Charlie), echo/+3 (Kaka), and shimmer/+2 (Lucy, cartoon delivery), paired with sugary coy, springy cartoon bird, and slender gentle delivery respectively.
@@ -248,6 +248,6 @@ Selected delivery: cartoon Charlie, Kaka and Lucy. All use mouth.playback_speed=
 
 Chinese: `python -m echo --config config.toml`. English: `python -m echo --config config.en.toml`, with a separate state-en memory directory. Restart after language or prompt changes. English backgrounds, tasks, scene status, reflection and voice instructions are adapted to English. Existing memories and quoted dialogue are not translated automatically.
 
-Runtime text lives in prompts/zh.json and prompts/en.json. Legacy charactor_setting files are historical and no longer loaded by the main application. When editing this specification, update the catalogs and required code together, then run `python -m echo.prompt_docs`. `python -m echo.prompt_docs --check` and tests detect text drift.
+All runtime prompt text lives in the root prompts.txt file. Legacy charactor_setting files are historical and no longer loaded by the main application. When editing this specification, update the catalogs and required code together, then run `python -m echo.prompt_docs`. `python -m echo.prompt_docs --check` and tests detect text drift.
 
 Existing Chinese beliefs are preserved, so the added Charlie and Kaka beliefs are not forced into existing memories. Adopting the complete new initial beliefs requires an explicit author-chosen backed-up reset. Persona edits do not automatically reset memory.

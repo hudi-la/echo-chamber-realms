@@ -12,7 +12,7 @@ from pathlib import Path
 
 from .brain import Decision, make_brain
 from .config import parse_config
-from .prompts import ROOT, catalog
+from .prompts import ROOT, catalog, trial_settings
 from .transcript import Transcript
 
 
@@ -50,7 +50,10 @@ async def conversation(brain, name, system, questions, window):
 async def run(args):
     config_path = args.config.resolve()
     cfg = parse_config(config_path.read_text(), config_path.parent)
-    variant = json.loads(args.variant.read_text())
+    trial = trial_settings()
+    variant = {'name': args.direction, 'history': trial['history'],
+               'environment_append': trial['a_boundary'] if args.direction == 'A' else '',
+               'questions': trial['questions']}
     systems = {name: trial_system(name, variant) for name in args.characters}
     result = {'variant': variant, 'systems': systems, 'config': str(config_path),
               'model': cfg.model, 'effort': cfg.puppet_effort, 'auth': cfg.brain_auth,
@@ -90,7 +93,7 @@ async def run(args):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--config', type=Path, default=ROOT / 'config.toml')
-    parser.add_argument('--variant', type=Path, default=ROOT / 'experiments/history-a/variant.json')
+    parser.add_argument('--direction', choices=['A', 'B'], default='A')
     parser.add_argument('--output', type=Path, required=True)
     parser.add_argument('--characters', nargs='+', choices=['Charlie', 'Lucy', 'Kaka'],
                         default=['Charlie', 'Lucy', 'Kaka'])

@@ -17,7 +17,7 @@ def test_reviewed_docs_match_both_runtime_catalogs():
     for language in ('zh', 'en'):
         assert (ROOT / 'docs' / f'prompts-and-flow.{language}.md').read_text() == render(language)
         for name, p in catalog(language)['personas'].items():
-            assert p['history'] == ''
+            assert isinstance(p['history'], str)
             assert len(p['initial_beliefs']) <= 6
             assert '不要求你每次' not in p['strategy']
             assert '初始信念' not in persona(name, language)

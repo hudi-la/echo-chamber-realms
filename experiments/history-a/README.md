@@ -5,8 +5,9 @@ Baseline tag: `checkpoint-before-history-experiments-20261022`.
 Experiment branch: `experiment/history-a-explicit-boundaries`.
 
 This is an isolated text trial, not a replacement of the exhibition prompts.
-`variant.json` adds one provisional shared history and one explicit behavioral
-instruction to the existing persona template. Identities, strategies,
+The trial sections at the end of `prompts.txt` supply the provisional shared
+history and the explicit behavioral instruction. `variant.json` is the historical
+snapshot from the first run; the runner no longer reads it. Identities, strategies,
 environment descriptions, initial beliefs, compose task, performance schema,
 and transcript rendering remain the production versions. The full system
 inputs are saved in `results.json`, along with the actual model and effort.

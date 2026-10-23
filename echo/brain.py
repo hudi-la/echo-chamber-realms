@@ -67,12 +67,9 @@ class PerformedLine(str):
         return obj
 
 
-PERFORMANCE_ASK = """
-Return text plus performance metadata. target is the person directly addressed:
-audience, Charlie, Lucy, or Kaka. tone is neutral, curious, hesitant, emphatic,
-or excited. body describes emphasis intent; the controller currently gives every speaker a brief identification movement.
-Choose from the character's intent and context; do not put stage directions in spoken text.
-"""
+# Compatibility export; runtime calls read the selected language from prompts.txt.
+PERFORMANCE_ASK = "\n\n" + catalog()["performance"] + "\n"
+
 LINE_SCHEMA = {
     "type": "object",
     "properties": {
@@ -186,7 +183,7 @@ class ClaudeBrain:
             return SILENT
 
     async def compose(self, system: str, situation: str, decision: Decision) -> str:
-        ask = situation + "\n\n" + catalog(getattr(self, "language", "zh"))["compose"] + PERFORMANCE_ASK
+        ask = situation + "\n\n" + catalog(getattr(self, "language", "zh"))["compose"] + "\n\n" + catalog(getattr(self, "language", "zh"))["performance"] + "\n"
         text = await self._json(self.model, system, ask, LINE_SCHEMA, 800)
         if text is None:
             return ""
@@ -265,7 +262,7 @@ class OpenAIBrain:
             return SILENT
 
     async def compose(self, system: str, situation: str, decision: Decision) -> str:
-        ask = situation + "\n\n" + catalog(getattr(self, "language", "zh"))["compose"] + PERFORMANCE_ASK
+        ask = situation + "\n\n" + catalog(getattr(self, "language", "zh"))["compose"] + "\n\n" + catalog(getattr(self, "language", "zh"))["performance"] + "\n"
         text = await self._json(self.model, system, ask, LINE_SCHEMA, "line", 1500)
         if text is None:
             return ""
