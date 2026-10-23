@@ -23,6 +23,7 @@ class SerialStage:
             import serial
             self.serial = serial.Serial(port, 115200, timeout=0, write_timeout=0.2)
         self.buffer = b''
+        self.eye_busy = {}
 
     def poll(self):
         if not self.serial:
@@ -33,10 +34,13 @@ class SerialStage:
                 line, self.buffer = self.buffer.split(b'\n', 1)
                 reply = line.decode(errors='replace').strip()
                 self.out('[Arduino] ' + reply)
-                if reply == 'READY ECR1':
+                if reply == 'READY ECR2':
+                    self.eye_busy.clear()
                     self.ready = True
                     if self.enabled:
                         self.send('CONFIG ' + self.relay_active)
+                if reply.startswith('IDLE '):
+                    self.eye_busy.pop(int(reply.split()[1]), None)
             if len(self.buffer) > 1024:
                 self.buffer = b''
             if self.ready and time.monotonic() - self.last > .5:
@@ -58,8 +62,15 @@ class SerialStage:
                 self.out('[动作] 写入失败: ' + str(error))
                 self.ready = False  # firmware watchdog releases relays
 
+    def can_look(self, name):
+        return time.monotonic() >= self.eye_busy.get(NAMES.index(name), 0)
+
     def look(self, name, direction, blink=False, smooth=False):
+        if not self.can_look(name):
+            return False
+        self.eye_busy[NAMES.index(name)] = time.monotonic() + 3.0
         self.send(f'LOOK {NAMES.index(name)} {direction} {int(blink)} {int(smooth)}')
+        return True
 
     def body(self, name, milliseconds):
         if self.enabled:
@@ -74,45 +85,72 @@ class SerialStage:
 
 
 class Performance:
+    """Only the speaker moves. Eye timing survives sentence boundaries and audio gaps."""
     def __init__(self, stage, now=time.monotonic, rng=None):
         self.stage, self.now, self.rng = stage, now, rng or random.Random()
         self.active = None
+        self.turn = None
+
+    def _look(self, direction, initial=False):
+        t = self.turn
+        if not getattr(self.stage, 'can_look', lambda name: True)(t['name']):
+            return False
+        result = self.stage.look(t['name'], direction,
+                                 False if initial else self.rng.random() < .35,
+                                 t['tone'] == 'hesitant')
+        if result is False:
+            return False
+        t['current'] = direction
+        t['wait'] = self.rng.uniform(3.2, 4.8)
+        t['initial'] = False
+        return True
 
     def start(self, name, text, sentence, duration):
-        self.stop()
-        info = getattr(text, 'performance', {})
-        target = info.get('target', 'audience')
-        tone = info.get('tone', 'neutral')
-        if target == name or target not in (*NAMES, 'audience'):
-            target = 'audience'
+        self.pause()
+        if sentence == 0 or self.turn is None or self.turn['name'] != name:
+            info = getattr(text, 'performance', {})
+            target = info.get('target', 'audience')
+            if target == name or target not in (*NAMES, 'audience'):
+                target = 'audience'
+            self.turn = dict(name=name, target=target, tone=info.get('tone', 'neutral'),
+                             main=gaze(name, target), current=None, wait=0, initial=True)
+        t = self.turn
         self.stage.poll()
-        self.stage.out(f'[表演] {name} → {target} / {tone} / 第{sentence + 1}句')
-        self.stage.look(name, gaze(name, target), self.rng.random() < .35,
-                        tone == 'hesitant' and duration > 3)
-        self.active = dict(name=name, at=self.now(), duration=duration, target=target,
-                           tone=tone, shifted=False, returned=False)
-        # A brief body cue identifies the current speaker on every sentence.
-        self.stage.body(name, min(1000, max(150, int(duration * 500))))
+        self.stage.out(f"[表演] {name} → {t['target']} / {t['tone']} / 第{sentence + 1}句")
+        now = self.now()
+        self.active = dict(name=name, at=now, duration=duration, last=now, body_at=now)
+        if t['initial']:
+            self._look(t['main'], initial=True)
+        # Renewable lease: stay on throughout playback; loss of updates turns it off.
+        self.stage.body(name, 1200)
 
     def tick(self):
         self.stage.poll()
-        a = self.active
+        a, t = self.active, self.turn
         if not a:
             return
-        elapsed = self.now() - a['at']
-        # Only long hesitant lines avert and return, leaving time for each movement.
-        if a['tone'] == 'hesitant' and a['duration'] > 7:
-            if elapsed > 2.6 and not a['shifted']:
-                a['shifted'] = True
-                self.stage.look(a['name'], 0 if a['target'] != 'audience' else 1, True, True)
-            if elapsed > a['duration'] - 2.4 and not a['returned']:
-                a['returned'] = True
-                self.stage.look(a['name'], gaze(a['name'], a['target']))
+        now = self.now()
+        t['wait'] -= max(0, now - a['last'])
+        a['last'] = now
+        if now - a['body_at'] >= .4:
+            self.stage.body(a['name'], 1200)
+            a['body_at'] = now
+        if t['initial']:
+            self._look(t['main'], initial=True)
+        elif t['wait'] <= 0:
+            # Alternate brief aversion and returning to the intended interlocutor.
+            direction = (t['main'] if t['current'] != t['main'] else
+                         self.rng.choice([d for d in (0, 1, 2) if d != t['main']]))
+            self._look(direction)
 
-    def stop(self):
+    def pause(self):
         if self.active:
             self.stage.send('STOP')
         self.active = None
+
+    def stop(self):
+        self.pause()
+        self.turn = None
 
 
 if __name__ == '__main__':
@@ -128,9 +166,9 @@ if __name__ == '__main__':
         if stage.serial and not stage.ready:
             raise SystemExit('Arduino ECR1 firmware did not become ready')
         for name, text, info in [
-            ('Charlie', 'Lucy，你真的相信他说的？', dict(target='Lucy', tone='curious', body=False)),
-            ('Lucy', '我……也没有说他一定是对的。', dict(target='Charlie', tone='hesitant', body=False)),
-            ('Kaka', '我早就告诉过你！', dict(target='audience', tone='excited', body=True)),
+            ('Charlie', 'Lucy，你真的相信他说的？', dict(target='Lucy', tone='curious')),
+            ('Lucy', '我……也没有说他一定是对的。', dict(target='Charlie', tone='hesitant')),
+            ('Kaka', '我早就告诉过你！', dict(target='audience', tone='excited')),
         ]:
             line = PerformedLine(text, info)
             stage.out(text)

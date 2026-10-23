@@ -189,7 +189,7 @@ class TtsMouth:
                             await asyncio.sleep(0.03)
                     finally:
                         if self.performance:
-                            self.performance.stop()
+                            self.performance.pause()
                 if self._stop_evt.is_set():
                     frac = (self.player.progress() if audio is not None and hasattr(self.player, "progress")
                             else min((time.monotonic() - started) / duration, 1.0))
@@ -202,6 +202,8 @@ class TtsMouth:
             completed = False
             raise
         finally:
+            if self.performance:
+                self.performance.stop()
             if pending is not None:
                 if not pending.done():
                     pending.cancel()

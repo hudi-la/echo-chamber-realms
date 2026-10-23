@@ -214,7 +214,7 @@
 [zh.performance]
 Return text plus performance metadata. target is the person directly addressed:
 audience, Charlie, Lucy, or Kaka. tone is neutral, curious, hesitant, emphatic,
-or excited. body describes emphasis intent; the controller currently gives every speaker a brief identification movement.
+or excited. Output only text and performance; performance contains only target and tone.
 Choose from the character's intent and context; do not put stage directions in spoken text.
 
 [en.decide]
@@ -358,7 +358,7 @@ Read the supplied text in English. A very slender, soft, warm cartoon young femi
 [en.performance]
 Return text plus performance metadata. target is the person directly addressed:
 audience, Charlie, Lucy, or Kaka. tone is neutral, curious, hesitant, emphatic,
-or excited. body describes emphasis intent; the controller currently gives every speaker a brief identification movement.
+or excited. Output only text and performance; performance contains only target and tone.
 Choose from the character's intent and context; do not put stage directions in spoken text.
 
 [trial.history]

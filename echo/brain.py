@@ -78,8 +78,7 @@ LINE_SCHEMA = {
             "type": "object", "properties": {
                 "target": {"type": "string", "enum": ["audience", "Charlie", "Lucy", "Kaka"]},
                 "tone": {"type": "string", "enum": ["neutral", "curious", "hesitant", "emphatic", "excited"]},
-                "body": {"type": "boolean"},
-            }, "required": ["target", "tone", "body"], "additionalProperties": False,
+            }, "required": ["target", "tone"], "additionalProperties": False,
         },
     },
     "required": ["text", "performance"], "additionalProperties": False,

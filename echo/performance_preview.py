@@ -10,11 +10,11 @@ from .performance import Performance, SerialStage
 
 ROOT = Path(__file__).resolve().parent.parent
 LINES = [
-    ('Charlie', 'Lucy，你真的相信他说的？', dict(target='Lucy', tone='curious', body=True),
+    ('Charlie', 'Lucy，你真的相信他说的？', dict(target='Lucy', tone='curious'),
      'Ask Lucy with curious disbelief; emphasize the question without shouting.'),
-    ('Lucy', '我……也没有说他一定是对的。', dict(target='Charlie', tone='hesitant', body=False),
+    ('Lucy', '我……也没有说他一定是对的。', dict(target='Charlie', tone='hesitant'),
      'Sound hesitant and defensive, with a natural thoughtful pause after 我.'),
-    ('Kaka', '我早就告诉过你！', dict(target='audience', tone='excited', body=True),
+    ('Kaka', '我早就告诉过你！', dict(target='audience', tone='excited'),
      'Sound excited and smug, with a brief emphatic delivery.'),
 ]
 
@@ -56,7 +56,7 @@ async def play(directory, port, relay_active, countdown):
             stage.poll()
             await asyncio.sleep(.03)
         if not stage.ready:
-            raise RuntimeError('Arduino READY ECR1 handshake timed out')
+            raise RuntimeError('Arduino READY ECR2 handshake timed out')
         stage.poll()
         for remaining in range(countdown, 0, -1):
             print(f'{remaining} 秒后开始', flush=True)
