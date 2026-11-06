@@ -1,0 +1,277 @@
+Echo Chamber Realms 参数修改手册
+按“想改什么 → 去哪里改 → 怎么改”查询
+
+一、先看这里
+
+三份总表都在本文件所在的项目根目录：
+  prompts.txt      文字设定：角色、生成任务、配音表演要求。
+  parameters.toml 数值旋钮：模型、语速、容量、时间、动作间隔。
+  rules.toml      行为开关：发言选择、点名、动作开关、角色称呼。
+
+使用步骤：
+  1. 按下文找到文件及 [分区名]，修改对应正文或值。
+  2. 保存为 UTF-8。
+  3. 停止当前程序，再重新启动。当前运行不会采用刚保存的新值。
+  4. 如果启动提示配置错误，按错误中的字段或分区名检查。
+
+程序在启动时统一读取、校验，生成一份深层只读快照。
+模型、声音、动作和异步任务都使用这一份；运行记忆和状态照常更新。
+声音试听、动作预览、历史试验入口也使用启动快照。
+
+日常调参数主要改 parameters.toml 的 profiles.zh 和 system。
+defaults 是缺项时的默认值，可能被 profiles.zh 覆盖，不作为日常调参入口。
+config.toml / config.en.toml 只选择 zh / en，不需要在这里重复维护参数。
+
+二、想改角色身份、性格、经历或世界设定
+
+去哪里改：prompts.txt
+搜索角色对应的分区。角色名使用 Charlie、Lucy 或 Kaka。
+
+以 Lucy 为例：
+  [zh.personas.Lucy.identity]       她是谁、身份是什么。
+  [zh.personas.Lucy.history]        她过去的经历，可以留空。
+  [zh.personas.Lucy.strategy]       她惯常如何回应、交流、应对事情。
+  [zh.personas.Lucy.environment]    她所处的环境与世界设定。
+  [zh.personas.Lucy.initial_beliefs] 空白记忆初始化时的信念。
+
+怎么改：保留 [分区名]，直接修改其下面、下一个分区之前的文字。
+例如，想让 Lucy 更愿意主动交流，可以把 strategy 正文改成：
+
+  [zh.personas.Lucy.strategy]
+  你习惯先观察，再用一个简短的问题加入对话。
+  遇到感兴趣的事情时，你会主动追问。
+
+角色背景会影响生成倾向，不保证模型每一句都机械遵守。
+正式角色资料从 prompts.txt 读取；旧 charactor_setting 目录保留为历史资料。
+
+初始信念怎么改：每条单独一行，以“- ”开头；目前最多六条。
+初始信念不等于运行中的当前信念。已有记忆不会仅因修改这一分区就被覆盖。
+但当前 reset_on_start = true，正常启动会备份并重置记忆，因此会重新装入初始信念。
+如果希望跨启动保留记忆，见第七部分。
+
+三、想改台词要求、反思方式或声音表演
+
+去哪里改：prompts.txt
+
+想改：所有角色写台词的共同要求，例如句子长短、表达方式。
+位置：[zh.compose]
+方法：修改任务正文，保留输出 text / performance 的结构要求。
+
+想改：角色如何回顾经历、更新信念。
+位置：[zh.ruminate]
+方法：修改反思要求；保留 {impression_ask}、{capacity} 占位符及输出字段要求。
+
+想改：某个角色说话时的声音表演，例如轻声、犹豫、停顿、强调。
+位置：[zh.voices.Charlie] / [zh.voices.Lucy] / [zh.voices.Kaka]
+方法：修改配音要求正文。这里交给声音合成器演绎已生成的台词。
+台词内容主要由角色背景和 compose 决定；音色、语速和移调见第五部分。
+
+其他分区：
+  persona_template：角色资料的拼接格式，保留 {identity}、{history}、
+                    {strategy}、{environment}。
+  performance：模型返回交谈对象 target 和语气 tone 的要求，须与程序结构相符。
+  daily / end / bedtime：不同反思场景的说明。
+  decide：当前正常主流程不使用，修改不会改变正常对话。
+  trial.*：试验用内容，不是正常启动自动加入的角色历史。
+
+不要删除分区标题或必需占位符，也不要随意增加新分区；解析器会检查它们。
+Prompt 保留 TXT，方便直接编辑长段文字；它已有分区、占位符与启动校验，
+无需为了和另外两份文件同后缀而改成 TOML。
+
+四、想改角色使用的模型
+
+去哪里改：parameters.toml → [profiles.zh.model]
+
+  puppet = "gpt-6-luna"       写台词的模型。
+  puppet_effort = "low"       台词模型思考量，支持的值取决于所选模型及接口。
+  ruminate = "gpt-6-luna"     整理经历、反思信念的模型。
+  alt = "gpt-5-mini"          备用的台词模型。
+  use_alt = false             false 用 puppet；true 用 alt。
+
+怎么改：修改引号里的模型名或思考量；模型必须受当前账号和接口支持。
+如果希望台词和反思一起换模型，要同时修改 puppet 和 ruminate。
+use_alt 只切换台词模型，不替换 ruminate。
+
+provider 是模型服务方；auth 是授权方式。当前使用 openai / subscription。
+切换服务方或授权方式，还需要相应凭据与接口支持，不能只改一个模型名字。
+账号密钥和登录凭据继续保存在原授权位置，不填入这三份总表。
+
+五、想改语速、音色、音高或左右声道
+
+去哪里改：parameters.toml
+
+想改：语速。
+位置：[profiles.zh.mouth] 的 playback_speed。
+方法：1.0 为原速；当前为 1.15；增大更快，减小更慢。
+当前允许范围为 0.5～2.0。现有播放加速方式也会使音高升高。
+
+想改：角色基础音色。
+位置：[profiles.zh.mouth.voices]
+方法：修改 Charlie / Lucy / Kaka 对应的音色名，必须是当前语音模型支持的值。
+
+想改：每个角色额外升降音高。
+位置：[profiles.zh.mouth.pitch]
+方法：数值以半音为单位；正数升高，负数降低，0 不额外移调。
+
+想改：每个角色从左边还是右边播放。
+位置：[profiles.zh.mouth.pan]
+方法：每个值为 [左声道音量, 右声道音量]，各自范围 0～1。
+例如 [1.0, 0.0] 全左，[0.0, 1.0] 全右，[0.5, 0.5] 居中。
+
+想改：声音合成模型或关闭语音。
+位置：[profiles.zh.mouth] 的 model / mode。
+方法：model 是语音合成模型；mode = "tts" 开启，"off" 改为文本输出。
+文本输出的模拟速度在 [system.speech] 的 print_chars_per_second，
+它不控制真实 TTS 播放速度。
+
+六、想改眼睛和身体动作
+
+想改：是否动眼睛、说话时是否动身体。
+去哪里改：rules.toml → [performance]
+怎么改：
+  move_eyes = true            是否发送眼睛动作。
+  body_during_speech = true   实际音频播放时是否持续驱动身体。
+  avert_and_return = true     是否间歇移开视线，再看回交谈对象。
+true 表示开启，false 表示关闭。身体动作需要实际连接并启用硬件。
+
+想改：眼睛动作的间隔、眨眼概率。
+去哪里改：parameters.toml → [system.eyes]
+怎么改：
+  busy_seconds = 3.0         发出眼睛动作后再次发指令的冷却时间，单位秒。
+  blink_probability = 0.35  相关眼睛动作附带眨眼的概率，范围 0～1。
+  wait_min_seconds = 3.2    视线变化随机等待范围下限，单位秒。
+  wait_max_seconds = 4.8    随机等待范围上限，单位秒。
+等待范围调大，视线变化通常更慢、更少。下限必须大于 0，且不大于上限。
+
+想改：身体动作持续运行的控制时间。
+去哪里改：parameters.toml → [system.body]
+怎么改：
+  lease_ms = 1200        每次身体动作续租的有效期，单位毫秒。
+  renew_seconds = 0.4   实际说话期间重新续租的间隔，单位秒。
+lease_ms 必须为 1～1200 的整数；renew_seconds 必须大于 0，
+并小于 lease_ms / 1000。
+这两个值不是身体摆动速度或幅度。说话期间持续续租，句间暂停、打断或结束时停止。
+真正的身体摆动速度、幅度、舵机校准和引脚仍由 Arduino 固件控制。
+
+想改：角色在舞台上的左右摆放顺序。
+去哪里改：rules.toml → [characters] 的 stage_left_to_right。
+怎么改：按观众视角，从左到右排列三个角色内部名字，每个恰好出现一次。
+这里只改变方向计算；[hardware_ids] 必须匹配固件编号，不要随摆放顺序一起改。
+
+七、想改对话节奏、记忆和接话规则
+
+想改：安静多久开始后续接话。
+去哪里改：parameters.toml → [profiles.zh.room]
+怎么改：
+  quiet_interval_with_visitor：有人时的安静间隔，单位秒，当前为 3。
+  quiet_interval_alone：无人时的自聊间隔，单位秒，当前为 120。
+  window：每次提供给角色的最近现场记录条数，当前为 24。
+  visitor_timeout：真正安静累计多久判断访客离开，单位秒。
+  visitor_hard_timeout：不论中间发生什么，多久没有人声就判断离开的保底时间。
+当前 presence.source = "none"，没有可靠硬件报告是否有人；人声推测用于幕后节奏。
+turn_window 当前为 0，保留程序同轮选人的行为，日常调节奏优先改安静间隔。
+
+想改：跨启动保留记忆，或每次从初始设定开始。
+去哪里改：parameters.toml → [profiles.zh.memory] 的 reset_on_start。
+怎么改：false 保留已有记忆；true 启动时备份并重置角色记忆。
+当前为 true。若不希望每次重新开始，改成 false 并重启。
+
+想改：多久反思一次、能保留多少信念。
+去哪里改：parameters.toml → [profiles.zh.memory]
+怎么改：
+  ruminate_every：累计听到多少条对话后触发反思，当前为 30。
+  belief_capacity：运行信念容量，当前为 6。
+  bedtime_min_heard：关机整理所需的最低听取计数，当前为 8。
+访客离开等条件也可能触发反思，不只由 ruminate_every 控制。
+initial_beliefs 的条数上限另由 rules.toml 的 validation.maximum_initial_beliefs
+检查；调整运行容量不会自动增加初始信念。
+
+想改：点名优先、避免连续发言、怎样选下一位。
+去哪里改：rules.toml → [conversation]
+怎么改：
+  prefer_named_character = true  明确点名时优先对应角色。
+  avoid_repeat_speaker = true    有其他候选时，上一个发言者让位。
+  ignore_own_speech_event = true 自己说完不立即作为新事件要求自己接话。
+  selection = "random"          筛选后随机选人；"first" 选择第一个候选。
+
+想改：角色有哪些能被点名识别的称呼。
+去哪里改：rules.toml → [aliases]
+怎么改：在对应列表中添加或修改带引号的称呼，项目之间用逗号隔开。
+例如 Lucy = ["Lucy", "露西", "小老鼠"]。
+程序当前识别明确且无歧义的开头称呼；添加别名不等于任意位置都能触发点名。
+Charlie / Lucy / Kaka 是内部身份标识，目前固定为三位，不通过改名字增删角色。
+
+想改：记录是否必须带信念变化理由、是否保存同伴观察和访客印象。
+去哪里改：rules.toml → [memory]
+怎么改：修改 require_change_reason、save_companion_observations、
+save_visitor_impressions 的 true / false。
+同伴观察与访客印象目前只保存，不作为后续生成上下文读取。
+
+八、想改听人说话、打断与硬件连接
+
+想改：停声后多等多久，避免把一句话切开。
+去哪里改：parameters.toml → [profiles.zh.ears]
+怎么改：pause_grace 是 VAD 停声后的额外等待秒数，当前为 1.2。
+silence_ms 是 VAD 分段的静音毫秒数，当前为 600。
+transcript_timeout / activity_timeout 是转写缺失和活动失联的等待上限。
+
+想改：人声检测灵敏度。
+去哪里改：同一分区的 vad_threshold。
+怎么改：范围 0～1，越高越不容易被噪音触发。应结合实际麦克风试听。
+
+想改：哪些短指令可以确认打断。
+去哪里改：rules.toml → [ears] 的 interrupt_commands。
+怎么改：编辑字符串列表，例如 ["停", "等等", "stop", "wait"]。
+
+想改：新动作控制器串口或继电器有效电平。
+去哪里改：parameters.toml → [system.serial]
+怎么改：port 填串口路径；relay_active 为 "HIGH" 或 "LOW"，必须匹配实际硬件。
+当前空值保持未连接/未启用状态。
+启动环境变量 ECR_SERIAL_PORT / ECR_RELAY_ACTIVE 可以覆盖这些值，
+覆盖只影响本场、记录在快照中，不回写总表。
+旧 [profiles.zh.motors] 字段保留兼容，不控制当前新动作控制器连接。
+
+九、中英文怎么改
+
+正常中文启动：python -m echo --config config.toml
+正常英文启动：python -m echo --config config.en.toml
+使用本机有效的 Python 环境运行以上命令。
+
+parameters.toml 的 profiles.en 继承 profiles.zh，只覆盖语言和状态目录。
+所以修改中文共用参数，例如语速，英文通常也一起改变。
+如果需要英文使用独立数值，在对应 profiles.en 分区显式覆盖。
+已有分区不要重复创建，只在其下补充键值。
+
+prompts.txt 的 zh.* 与 en.* 是独立正文，不自动互相翻译。
+中文角色设定改了，若英文也需要相同变化，请另改对应 en.* 分区。
+system 参数与 rules.toml 规则由中英文共同使用。
+
+十、格式、状态和修改边界
+
+TOML 编辑规则：
+  保留 [分区名] 和字段名；主要改等号右边。
+  文字用英文双引号，例如 selection = "random"。
+  数字不加引号，例如 playback_speed = 1.15。
+  开关写小写 true / false，不加引号。
+  列表用方括号，项目之间用英文逗号。
+  # 后面的文字是注释，不参与运行。
+
+TXT 编辑规则：
+  正文可以直接写多行；保留分区标题和必需占位符。
+  必需分区不要删除，尤其不要因为 decide 停用就删掉它。
+
+运行数据在 state/（中文）和 state-en/（英文）：
+  角色 JSON：当前信念、待处理经历、同伴观察、访客印象等。
+  transcript.jsonl：实际对话。
+  changes.jsonl：信念变化理由。
+  sessions.jsonl：到访记录。
+  runs/<本次运行>/configuration.json：实际加载的总表与启动配置原文、哈希、
+  有效参数和硬件启动覆盖。记录来自内存快照，不会重读后来修改过的总表。
+
+这些目录保存运行状态与输出。已有角色记忆在未重置时会继续载入，
+当前信念会参与后续生成；它们不是替代三份总表的参数入口。
+发言权、播放进度、计时器等临时状态在内存中变化，不回写总表。
+
+三份总表能调程序已实现的行为；新算法、模型 JSON 输出结构、通信协议、
+Arduino 引脚/校准、浏览器界面和底层音频格式仍需相应代码或固件修改。
+rules.toml 的 validation 是约束，不作为普通体验旋钮随意放宽。

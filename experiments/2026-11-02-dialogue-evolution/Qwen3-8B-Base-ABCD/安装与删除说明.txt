@@ -1,0 +1,20 @@
+Qwen3-8B-Base 本地试用
+
+安装目录：
+/Users/hudi/Documents/Codex/2026-11-02/assistant-rlhf-rlaif-llm-echo-chamber/work/base-abcd
+
+模型：Qwen/Qwen3-8B-Base
+本地格式：第三方 mradermacher 转换的 Q4_K_M GGUF，约 5.03GB。量化并非官方原始精度，可能影响输出。
+模型来源：https://huggingface.co/mradermacher/Qwen3-8B-Base-GGUF
+固定版本：11c0eaa7581c2cedab123814f676ff44da1bc7b0
+预期 SHA256：5ff977770694e6792210e48575461859f0fe99f8e349cdefba0a8f670b5d02c7
+工具：llama.cpp build 12061 / commit d02b4c0d6，macOS arm64 官方发布包。
+
+启动：双击安装目录中的 start.command，保持弹出的窗口开着。
+浏览器访问：http://127.0.0.1:18764
+停止：在启动窗口按 Control+C。
+它是 Base 文本续写模型，网页聊天模板未必适合它；本次实验使用原始文本补全接口。
+
+删除：先停止运行，再在 Finder 中删除整个 base-abcd 目录，并按需要清空废纸篓。
+结果另存在 outputs/Qwen3-8B-Base-ABCD，可保留，不影响删除模型。
+没有设置开机自启，没有修改正式项目，没有购买服务。

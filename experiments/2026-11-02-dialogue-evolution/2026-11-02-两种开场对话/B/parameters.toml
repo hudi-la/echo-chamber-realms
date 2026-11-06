@@ -1,0 +1,285 @@
+# 参数总表：模型、速度、容量、时间、动作节奏等数值在这里改。
+# decide_tokens / seed_tokens 是旧接口兼容参数，当前主流程不调用 decide 或生成式 seed。
+# profiles.zh / profiles.en 是正常中英文运行的完整配置；defaults 是独立测试、临时配置缺项时的值。
+# system 是原来分散在 Python 中的执行参数。修改后重启程序，确保所有模块使用同一套设置。
+# 身体 lease_ms 是续租有效期，不是让身体只动这么久；renew_seconds 是说话中续租的间隔。
+# system.serial.port / relay_active 是真实新动作控制器设置；空值保持当前未连接状态。
+# 环境变量 ECR_SERIAL_PORT / ECR_RELAY_ACTIVE 仍作为启动时显式覆盖，覆盖只记录在本次运行，不写回总表。
+# 音频采样格式、Arduino 命令和 OAuth 地址属于协议约定，不应当作普通旋钮修改。
+
+
+# 缺省值：供临时配置和测试补齐缺项，正常运行请改 profiles.zh。
+[defaults]
+state_dir = "state"
+
+[defaults.prompts]
+language = "zh"
+
+[defaults.model]
+provider = "anthropic"
+auth = "api"
+subscription_profile = "default"
+puppet_effort = "none"
+use_alt = false
+
+[defaults.room]
+turn_window = 0.0
+window = 24
+quiet_interval_with_visitor = 8
+quiet_interval_alone = 120
+visitor_timeout = 75
+visitor_hard_timeout = 300
+
+[defaults.memory]
+reset_on_start = false
+ruminate_every = 30
+bedtime_min_heard = 8
+belief_capacity = 6
+unspoken_keep = 8
+
+[defaults.ears]
+mode = "console"
+model = "gpt-4o-transcribe"
+silence_ms = 600
+interrupt = "confirm"
+device = ""
+min_chars = 2
+vad_threshold = 0.7
+gate_factor = 3.0
+gate_floor = 400
+pause_grace = 1.2
+transcript_timeout = 8.0
+activity_timeout = 12.0
+
+[defaults.mouth]
+mode = "off"
+model = "gpt-4o-mini-tts"
+playback_speed = 1.0
+
+[defaults.mouth.voices]
+Charlie = "nova"
+Kaka = "onyx"
+Lucy = "shimmer"
+
+[defaults.mouth.pitch]
+Charlie = 6
+Kaka = 6
+Lucy = 7
+
+[defaults.mouth.pan]
+Charlie = [1.0, 0.0]
+Kaka = [0.0, 1.0]
+Lucy = [0.5, 0.5]
+
+[defaults.motors]
+mode = "off"
+port = "/dev/cu.usbserial-1130"
+baud = 9600
+
+[defaults.monitor]
+port = 8765
+
+[defaults.audio]
+io = "local"
+
+[defaults.presence]
+source = "none"
+
+[defaults.persona]
+dir = "charactor_setting"
+
+# 各模型服务的缺省选择；profiles.zh 内的明确选择优先。
+[providers]
+
+[providers.openai]
+puppet = "gpt-5.5"
+alt = "gpt-5-mini"
+
+[providers.anthropic]
+puppet = "claude-opus-5"
+alt = "claude-haiku-4-5"
+
+[profiles]
+
+# 正常运行参数：中文使用这里；英文继承这里，再覆盖语言。
+[profiles.zh]
+
+[profiles.zh.prompts]
+language = "zh"
+
+[profiles.zh.model]
+auth = "subscription"
+subscription_profile = "default"
+provider = "openai"
+puppet = "gpt-6-luna"
+puppet_effort = "low"
+ruminate = "gpt-6-luna"
+alt = "gpt-5-mini"
+use_alt = false
+
+# 旧目录字段保留兼容；正式角色设定实际从 prompts.txt 读取。
+[profiles.zh.persona]
+dir = "charactor_setting/v2"
+
+[profiles.zh.room]
+turn_window = 0
+window = 24
+quiet_interval_with_visitor = 3
+quiet_interval_alone = 120
+visitor_timeout = 75
+visitor_hard_timeout = 300
+
+[profiles.zh.memory]
+reset_on_start = true
+ruminate_every = 30
+bedtime_min_heard = 8
+belief_capacity = 6
+unspoken_keep = 8
+
+[profiles.zh.audio]
+io = "browser"
+
+[profiles.zh.presence]
+source = "none"
+
+[profiles.zh.monitor]
+port = 8765
+
+[profiles.zh.ears]
+mode = "realtime"
+pause_grace = 1.2
+transcript_timeout = 8.0
+activity_timeout = 12.0
+model = "gpt-4o-transcribe"
+language = "zh"
+silence_ms = 600
+interrupt = "confirm"
+min_chars = 2
+vad_threshold = 0.7
+gate_factor = 3.0
+gate_floor = 400
+
+[profiles.zh.mouth]
+mode = "tts"
+model = "gpt-4o-mini-tts"
+playback_speed = 1.15
+
+[profiles.zh.mouth.voices]
+Charlie = "nova"
+Kaka = "echo"
+Lucy = "shimmer"
+
+[profiles.zh.mouth.pitch]
+Charlie = 3
+Kaka = 3
+Lucy = 2
+
+[profiles.zh.mouth.pan]
+Charlie = [1.0, 0.0]
+Kaka = [0.0, 1.0]
+Lucy = [0.5, 0.5]
+
+# 旧版兼容字段，当前新动作系统不靠此分区连接硬件；真实端口看 system.serial。
+[profiles.zh.motors]
+mode = "off"
+port = "/dev/cu.usbserial-1130"
+baud = 9600
+
+# 英文版沿用中文的数值，只覆盖语言和状态目录。
+[profiles.en]
+extends = "zh"
+state_dir = "state-en"
+
+[profiles.en.prompts]
+language = "en"
+
+[profiles.en.ears]
+language = "en"
+
+[system]
+
+# 模型请求：超时用秒，tokens 为 API 模式下的输出预算；订阅接口沿用其既有行为，不发送该预算。
+[system.model]
+compose_timeout = 15.0
+subscription_timeout = 15.0
+subscription_max_reply_chars = 100000
+subscription_max_retries = 0
+openai_decide_tokens = 800
+anthropic_decide_tokens = 400
+anthropic_compose_tokens = 800
+anthropic_ruminate_tokens = 2000
+anthropic_seed_tokens = 1500
+openai_compose_tokens = 1500
+openai_ruminate_tokens = 3000
+openai_seed_tokens = 2000
+shutdown_reflection_timeout = 25.0
+
+# 语音与播放：时间用秒，速度为每秒字符数。
+[system.speech]
+tts_timeout = 20.0
+playback_poll_seconds = 0.03
+browser_start_timeout = 3.0
+browser_end_grace = 3.0
+print_chars_per_second = 6.0
+print_min_seconds = 0.1
+minimum_audio_seconds = 0.05
+recent_echo_seconds = 8.0
+short_sentence_chars = 2
+
+# 眼睛：冷却/间隔用秒，眨眼概率为 0 到 1。
+[system.eyes]
+busy_seconds = 3.0
+blink_probability = 0.35
+wait_min_seconds = 3.2
+wait_max_seconds = 4.8
+
+# 身体：lease_ms 用毫秒且不能超过现有固件上限 1200；renew_seconds 用秒。
+[system.body]
+lease_ms = 1200
+renew_seconds = 0.4
+
+# 串口与新动作控制器：端口和继电器电平在这里配置，空值保持未连接；不是旧 motors 配置。
+[system.serial]
+port = ""
+relay_active = ""
+baud = 115200
+read_chunk_bytes = 512
+event_poll_seconds = 0.03
+buffer_limit_bytes = 1024
+write_timeout = 0.2
+heartbeat_seconds = 0.5
+
+# 转写与回声：时间用秒，活动阈值为 PCM 幅度。
+[system.ears]
+echo_threshold = 0.6
+echo_min_match_chars = 2
+gate_tail_seconds = 0.5
+gate_learn_chunks = 15
+gate_rise_rate = 0.05
+gate_fall_rate = 0.2
+event_poll_seconds = 0.1
+guarded_min_chars = 4
+max_upload_queue_chunks = 20
+voice_activity_level = 300
+stream_poll_seconds = 0.5
+voice_activity_tail_seconds = 0.7
+
+# 房间循环与等待音频就绪：单位秒。
+[system.room]
+tick_seconds = 1.0
+audio_ready_poll_seconds = 0.1
+
+# 监控台：记录条数、绑定地址、更新和连接保活间隔。
+[system.monitor]
+history_entries = 300
+host = "127.0.0.1"
+update_seconds = 1.0
+websocket_heartbeat_seconds = 15.0
+
+# 音频队列：积压的最长秒数。
+[system.audio]
+mic_queue_seconds = 1.0
+
+# 提供给模型的现场记录：安静多久才显示累计秒数。
+[system.transcript]
+show_quiet_after_seconds = 5.0

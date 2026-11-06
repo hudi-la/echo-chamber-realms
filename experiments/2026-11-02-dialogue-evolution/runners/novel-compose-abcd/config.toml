@@ -1,0 +1,9 @@
+profile = "zh"
+[mouth]
+mode = "off"
+[ears]
+mode = "console"
+[motors]
+mode = "off"
+[audio]
+io = "local"

@@ -1,0 +1,10 @@
+本轮观察：
+A：Kaka仍强调观众的重要性，但后半段转向与Charlie一起照顾Lucy。
+B：Kaka多次把话题拉回自己的小城与眼光；这一组未发展成全体一起紧张、互相陪伴。
+C：第二条Lucy把Creator读博事件接成自己的经历，随后Charlie与Kaka安慰她，出现角色与事件主体混淆；不能把这段当作准确回应原事件。
+D：没有持续追问电话进展，但逐步把事件当成Lucy的处境，后半段又给出问清联系方式的建议。既有讽刺与抱怨，也有主体混淆。
+每组一次，不能把差异单独归因于人物历史修改。
+
+英文同步范围：en.compose、Charlie.history、Lucy.history、Kaka.history。保留用户中文原文，未修改trial分区。
+trial.history是旧实验替换历史；trial.a_boundary是在该实验A条件下追加的外部经验/知识边界；trial.questions是固定三轮问题。echo/history_trial.py使用，正式compose不使用。本次runner直接读取personas并调用compose，不调用trial_settings，因此三个trial分区未进入模型请求。
+Git能确认2026-10-22 21:02:08 -0700、提交5b3360d将这些分区集中到prompts.txt；不是已证明的最初编写时间，也不能据此确定由谁提出。解析器当前要求保留这些分区，故本次未删除。

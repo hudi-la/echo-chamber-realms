@@ -1,0 +1,85 @@
+{
+  "reports": 40,
+  "missing": 0,
+  "totals": {
+    "input": 30727,
+    "output": 2012,
+    "total": 32739,
+    "cached": 0,
+    "reasoning": 0
+  },
+  "recent": [
+    {
+      "model": "gpt-6-luna",
+      "task": "line",
+      "input": 691,
+      "output": 50,
+      "total": 741,
+      "cached": 0,
+      "reasoning": 0
+    },
+    {
+      "model": "gpt-6-luna",
+      "task": "line",
+      "input": 737,
+      "output": 32,
+      "total": 769,
+      "cached": 0,
+      "reasoning": 0
+    },
+    {
+      "model": "gpt-6-luna",
+      "task": "line",
+      "input": 794,
+      "output": 63,
+      "total": 857,
+      "cached": 0,
+      "reasoning": 0
+    },
+    {
+      "model": "gpt-6-luna",
+      "task": "line",
+      "input": 801,
+      "output": 47,
+      "total": 848,
+      "cached": 0,
+      "reasoning": 0
+    },
+    {
+      "model": "gpt-6-luna",
+      "task": "line",
+      "input": 876,
+      "output": 48,
+      "total": 924,
+      "cached": 0,
+      "reasoning": 0
+    },
+    {
+      "model": "gpt-6-luna",
+      "task": "line",
+      "input": 867,
+      "output": 53,
+      "total": 920,
+      "cached": 0,
+      "reasoning": 0
+    },
+    {
+      "model": "gpt-6-luna",
+      "task": "line",
+      "input": 947,
+      "output": 69,
+      "total": 1016,
+      "cached": 0,
+      "reasoning": 0
+    },
+    {
+      "model": "gpt-6-luna",
+      "task": "line",
+      "input": 955,
+      "output": 33,
+      "total": 988,
+      "cached": 0,
+      "reasoning": 0
+    }
+  ]
+}

@@ -1,0 +1,12 @@
+{
+  "repeat_penalty": 1.05,
+  "repeat_last_n": 256,
+  "dry_multiplier": 0.8,
+  "dry_base": 1.75,
+  "dry_allowed_length": 4,
+  "dry_penalty_last_n": 512,
+  "temperature": 0.8,
+  "top_p": 0.95,
+  "top_k": 40,
+  "min_p": 0.0
+}

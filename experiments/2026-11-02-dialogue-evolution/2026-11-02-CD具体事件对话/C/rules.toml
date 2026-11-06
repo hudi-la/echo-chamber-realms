@@ -1,0 +1,51 @@
+# 行为规则总表：这是程序读取的开关和选项，不是发给模型的自然语言说明。
+# 修改后重启生效。这里只配置程序已经实现的规则；新的算法仍需要写代码。
+
+[conversation]
+prefer_named_character = true  # 观众明确点名时优先该角色
+avoid_repeat_speaker = true    # 有其他候选时，上一个发言者让位
+ignore_own_speech_event = true # 自己说完不会立即作为新事件要求自己接话
+selection = "random"          # 可选 random 或 first；先按以上规则筛选，再选择
+
+[characters]
+names = ["Charlie", "Lucy", "Kaka"]
+stage_left_to_right = ["Kaka", "Lucy", "Charlie"]  # 观众视角，决定左右方向
+
+[aliases]
+Charlie = ["Charlie", "查理", "小狗", "dog", "doggy", "furry one"]
+Lucy = ["Lucy", "露西", "小耗子", "耗子", "小老鼠", "老鼠", "mouse", "rate", "small one"]
+Kaka = ["Kaka", "卡卡", "鸵鸟", "bird", "ostrich", "goose"]
+
+[memory]
+reflection_enabled = false     # 暂停全部模型反刍，只生成对话
+allow_belief_changes = false   # 禁止反刍修改核心信念
+require_change_reason = true
+save_companion_observations = false
+save_visitor_impressions = false
+# 同伴看法与访客印象当前停止生成和保存；历史记录保留，不作为生成上下文。
+
+[performance]
+body_during_speech = true       # 有实际音频播放时，程序持续续租身体动作；不由模型选择
+move_eyes = true
+avert_and_return = true         # 看向交谈对象后，间歇移开再返回
+smooth_tones = ["hesitant"]
+tones = ["neutral", "curious", "hesitant", "emphatic", "excited"]
+audience_target = "audience"
+
+[ears]
+interrupt_commands = ["停", "等等", "等一下", "别说了", "stop", "wait", "listen"]
+echo_name_tokens = ["kaka", "lucy", "charlie", "卡卡", "露西", "查理"]
+
+[validation]
+maximum_initial_beliefs = 6
+minimum_playback_speed = 0.5
+maximum_playback_speed = 2.0
+minimum_pause_grace = 0.1
+minimum_transcript_timeout = 1.0
+minimum_activity_timeout = 2.0
+
+[hardware_ids]
+# 必须匹配 Arduino 固件编号；只改变摆放顺序时改上方 stage_left_to_right。
+Kaka = 0
+Lucy = 1
+Charlie = 2

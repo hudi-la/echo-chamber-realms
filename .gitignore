@@ -1,5 +1,12 @@
+.venv/
+state/
+__pycache__/
+*.pyc
+.DS_Store
+state-*/
 
-# Local credentials
-.env
-.env.*
-!.env.example
+# Independent English runtime memory
+state-en/
+
+# Local implementation tools and isolated dependency environments
+work/

@@ -1,0 +1,2 @@
+# 仅选择参数总表中的配置；数值统一在 parameters.toml 修改。
+profile = "zh"

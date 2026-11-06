@@ -1,0 +1,13 @@
+[project]
+name = "echo-chamber"
+version = "0.1.0"
+requires-python = ">=3.12"
+
+[project.optional-dependencies]
+hardware = ["pyserial>=3.5,<4"]
+subscription = ["PyJWT[crypto]>=2.10,<3", "httpx>=0.28,<1", "aiohttp>=3.11,<4", "openai>=2,<4"]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]
+pythonpath = ["."]
