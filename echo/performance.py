@@ -1,6 +1,7 @@
 """Sparse sentence performance, clocked from confirmed playback. No delayed action queue."""
 
 from .settings import parameter, rule
+import os
 import random
 import time
 
@@ -20,6 +21,8 @@ class SerialStage:
         self.out, self.serial = out, None
         self.enabled = relay_active in ('HIGH', 'LOW')
         self.ready = False
+        self.configured = False
+        self.config_sent_at = 0
         self.last = time.monotonic()
         self.relay_active = relay_active
         if port:
@@ -39,13 +42,21 @@ class SerialStage:
                 self.out('[Arduino] ' + reply)
                 if reply == 'READY ECR2':
                     self.eye_busy.clear()
+                    self.configured = False
                     self.ready = True
                     if self.enabled:
                         self.send('CONFIG ' + self.relay_active)
+                        self.config_sent_at = time.monotonic()
+                if reply == 'OK CONFIG':
+                    self.configured = True
                 if reply.startswith('IDLE '):
                     self.eye_busy.pop(int(reply.split()[1]), None)
             if len(self.buffer) > parameter("serial.buffer_limit_bytes"):
                 self.buffer = b''
+            if (self.ready and self.enabled and not self.configured
+                    and time.monotonic() - self.config_sent_at > parameter("serial.heartbeat_seconds")):
+                self.send('CONFIG ' + self.relay_active)
+                self.config_sent_at = time.monotonic()
             if self.ready and time.monotonic() - self.last > parameter("serial.heartbeat_seconds"):
                 self.send('PING')
         except (OSError, ValueError) as error:
@@ -66,6 +77,8 @@ class SerialStage:
                 self.ready = False  # firmware watchdog releases relays
 
     def can_look(self, name):
+        if self.serial and not self.ready:
+            return False
         return time.monotonic() >= self.eye_busy.get(rule('hardware_ids')[name], 0)
 
     def look(self, name, direction, blink=False, smooth=False):
@@ -76,7 +89,7 @@ class SerialStage:
         return True
 
     def body(self, name, milliseconds):
-        if self.enabled:
+        if self.enabled and (not self.serial or (self.ready and self.configured)):
             self.send(f"BODY {rule('hardware_ids')[name]} {milliseconds}")
         else:
             self.out(f'[动作预览，身体未启用] {name}: {milliseconds}ms')
@@ -172,7 +185,7 @@ if __name__ == '__main__':
             stage.poll()
             time.sleep(.03)
         if stage.serial and not stage.ready:
-            raise SystemExit('Arduino ECR1 firmware did not become ready')
+            raise SystemExit('Arduino ECR2 firmware did not become ready')
         for name, text, info in [
             ('Charlie', 'Lucy，你真的相信他说的？', dict(target='Lucy', tone='curious')),
             ('Lucy', '我……也没有说他一定是对的。', dict(target='Charlie', tone='hesitant')),

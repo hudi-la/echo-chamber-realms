@@ -2,6 +2,51 @@ from echo.performance import Performance, gaze
 from echo.brain import PerformedLine, parse_line
 
 
+def test_serial_handshake_gates_eyes_and_body_configuration(monkeypatch):
+    import serial
+    from echo.performance import SerialStage
+
+    class Port:
+        incoming = b''
+        def __init__(self, *args, **kwargs): self.writes = []
+        @property
+        def in_waiting(self): return len(self.incoming)
+        def read(self, n):
+            data, self.incoming = self.incoming[:n], self.incoming[n:]
+            return data
+        def write(self, data): self.writes.append(data)
+        def close(self): pass
+
+    monkeypatch.setattr(serial, 'Serial', Port)
+    stage = SerialStage('test', 'HIGH', out=lambda _: None)
+    assert not stage.look('Charlie', 0)
+    stage.body('Charlie', 200)
+    assert not stage.serial.writes
+    stage.serial.incoming = b'READY ECR2\n'
+    stage.poll()
+    assert stage.serial.writes == [b'CONFIG HIGH\n']
+    stage.body('Charlie', 200)
+    assert stage.serial.writes == [b'CONFIG HIGH\n']
+    stage.serial.incoming = b'ERR COMMAND\n'
+    stage.config_sent_at = 0
+    stage.poll()
+    assert stage.serial.writes == [b'CONFIG HIGH\n', b'CONFIG HIGH\n']
+    assert not stage.configured
+    stage.serial.incoming = b'OK CONFIG\n'
+    stage.poll()
+    stage.body('Charlie', 200)
+    assert stage.serial.writes[-1] == b'BODY 2 200\n'
+    assert stage.look('Charlie', 0)
+    assert not stage.look('Charlie', 1)
+    stage.serial.incoming = b'IDLE 2\n'
+    stage.poll()
+    assert stage.look('Charlie', 1)
+    stage.serial.incoming = b'READY ECR2\n'
+    stage.poll()
+    assert not stage.configured
+    assert stage.can_look('Charlie')
+
+
 class Stage:
     def __init__(self): self.commands = []
     def out(self, text): pass

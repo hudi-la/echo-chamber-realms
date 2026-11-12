@@ -240,8 +240,8 @@ renew_seconds = 0.4
 
 # 串口与新动作控制器：端口和继电器电平在这里配置，空值保持未连接；不是旧 motors 配置。
 [system.serial]
-port = ""
-relay_active = ""
+port = "/dev/cu.usbmodem31401"
+relay_active = "HIGH"
 baud = 115200
 read_chunk_bytes = 512
 event_poll_seconds = 0.03

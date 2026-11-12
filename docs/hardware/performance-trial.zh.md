@@ -40,3 +40,15 @@ D12鸟，D13狗。2026-10-21已从旧程序puppet_gpt_project确认HIGH启动、
 - 眼睛在整次发言开头先看交流对象，之后约每3.2–4.8秒安排一次移开/回看；随机眨眼、犹豫缓动。眼神在不同音频句段之间保持进度，等待语音时冻结计时。结束整次发言后清除计划，已开始的眼睛动作自然结束。
 - 新固件完成眼睛动作后反馈IDLE角色编号；Python等待忙碌结束再发下一条，3秒为保守超时回退，无旧动作队列。只安排说话者动作。
 - 固件握手升级为READY ECR2。旧ECR1不启用，需新Python与新固件一起测试。本轮仅离线测试和编译，未连接串口、未上传、未运动。
+
+## 2026-11-11 实物连接
+
+环境修复后，主程序使用 parameters.toml 的 system.serial：端口 /dev/cu.usbmodem31401，relay_active="HIGH"。同一配置供中英文启动使用；接线保持鸟D12灰线、狗D13紫线，老鼠点头D10。当前眼睛参数已同步为11月11日缩窄后的版本。
+
+已给UNO编译上传 ThreePuppets_SerialPerformance（配套 current-20261021/PuppetEyes，含head接口）。上传后等待电脑指令，不运行随机演示。串口协议为READY ECR2、CONFIG HIGH、LOOK、BODY、STOP、PING；原随机演示的G/P/T不适用于本固件。使用主程序时关闭Arduino IDE串口监视器，避免占用端口。
+
+Python等待READY才发送眼睛动作，等待OK CONFIG才发送身体动作；未收到配置确认时按心跳间隔重试配置。实际播放时仅说话者动作；结束或打断后STOP。主程序的声音禁用/文字模式不触发语音身体同步。目标目前根据角色舞台顺序映射为左/右/中，并未完成每只木偶看具体角色/观众的独立位置标定。尚未增加翻白眼或新的情绪动作库。
+
+固定有声预览：`.venv/bin/python -m echo.performance_preview --countdown 5`。复用work/performance-audio中已有三句缓存，不调用模型或TTS、不修改角色记忆；缓存缺失时不会自动生成。macOS使用内置afplay播放，无需pygame；以本地播放进程启动为时间基准，没有浏览器的play_started回执。正式主程序仍使用浏览器确认播放开始后再动作。可使用--port、--relay-active覆盖配置。
+
+回退到独立眼睛演示时，使用stable-2026-11-11-before-dialogue-motion快照内草图与库重新烧录；如仅想关闭主程序硬件，设system.serial.port=""、relay_active=""后重启。

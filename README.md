@@ -8,6 +8,8 @@
 
 本机 `.venv` 链接到上述本地环境；原有失效环境保存在 `work/venv-before-startup-fix-20261111/`，用于回溯，程序不再读取它。不要复制虚拟环境到其他电脑；在新电脑用启动脚本重新建立。
 
+当前已连接 UNO 的眼睛与身体动作：启动前关闭 Arduino IDE 串口监视器，双击中／英文启动入口，并在声音页面启用音频。实际播放时驱动说话角色，播放结束或打断后停止身体。端口和触发电平在 `parameters.toml` 的 `[system.serial]`，目前为 `/dev/cu.usbmodem31401`、`HIGH`。Arduino 已使用串口表演固件，旧随机演示的 G/P/T 不适用；退出主程序用 Ctrl-C。固定缓存台词测试与回退说明见 [硬件说明](docs/hardware/performance-trial.zh.md)。
+
 # Echo Chamber Realms
 
 **An interactive art installation by [Hu Di](https://hudiworks.com/), first exhibited in April 2024.**

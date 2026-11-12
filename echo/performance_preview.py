@@ -1,6 +1,10 @@
 """Prepare three TTS clips, then play a countdown-led hardware preview without the room."""
 import argparse
 import asyncio
+import shutil
+import subprocess
+import tempfile
+import time
 from pathlib import Path
 
 from .brain import PerformedLine
@@ -17,6 +21,49 @@ LINES = [
     ('Kaka', '我早就告诉过你！', dict(target='audience', tone='excited'),
      'Sound excited and smug, with a brief emphatic delivery.'),
 ]
+
+
+class AfplayPlayer:
+    """Use macOS audio for cached previews without requiring pygame."""
+    def __init__(self):
+        self.process = None
+        self.directory = tempfile.TemporaryDirectory(prefix='ecr-preview-')
+        self.path = Path(self.directory.name) / 'preview.wav'
+        self.started = self.duration = 0
+
+    def play(self, pcm, sr, pan):
+        import soundfile as sf
+        self.stop()
+        sf.write(self.path, pcm, sr)
+        self.duration = len(pcm) / sr
+        self.process = subprocess.Popen(['afplay', str(self.path)])
+        self.started = time.monotonic()
+
+    @property
+    def playback_started(self):
+        return self.process is not None and self.process.poll() is None
+
+    def busy(self):
+        if self.process is None:
+            return False
+        code = self.process.poll()
+        if code is not None and code != 0:
+            raise RuntimeError(f'afplay failed ({code})')
+        return code is None
+
+    def progress(self):
+        return min((time.monotonic() - self.started) / max(self.duration, .001), 1)
+
+    def stop(self):
+        if self.process is not None:
+            if self.process.poll() is None:
+                self.process.terminate()
+            self.process.wait()
+            self.process = None
+
+    def close(self):
+        self.stop()
+        self.directory.cleanup()
 
 
 async def prepare(directory):
@@ -49,11 +96,13 @@ async def play(directory, port, relay_active, countdown):
 
 async def _play(directory, port, relay_active, countdown):
     import soundfile as sf
-    import pygame
     # Validate every clip and initialize audio before opening hardware.
     clips = {name: sf.read(directory / f'{name}.wav', dtype='float32') for name, *_ in LINES}
-    player = PygamePlayer()
-    player._ensure(clips['Charlie'][1])
+    if shutil.which('afplay'):
+        player = AfplayPlayer()
+    else:
+        player = PygamePlayer()
+        player._ensure(clips['Charlie'][1])
     stage = SerialStage(port, relay_active)
     director = Performance(stage)
     async def cached(name, text): return clips[name]
@@ -61,11 +110,11 @@ async def _play(directory, port, relay_active, countdown):
     mouth.performance = director
     try:
         deadline = asyncio.get_running_loop().time() + 6
-        while not stage.ready and asyncio.get_running_loop().time() < deadline:
+        while (not stage.ready or (stage.enabled and not stage.configured)) and asyncio.get_running_loop().time() < deadline:
             stage.poll()
             await asyncio.sleep(.03)
-        if not stage.ready:
-            raise RuntimeError('Arduino READY ECR2 handshake timed out')
+        if not stage.ready or (stage.enabled and not stage.configured):
+            raise RuntimeError('Arduino READY ECR2 / CONFIG acknowledgement timed out')
         stage.poll()
         for remaining in range(countdown, 0, -1):
             print(f'{remaining} 秒后开始', flush=True)
@@ -84,15 +133,19 @@ async def _play(directory, port, relay_active, countdown):
         await mouth.stop()
         director.stop()
         stage.close()
-        pygame.mixer.quit()
+        if isinstance(player, AfplayPlayer):
+            player.close()
+        else:
+            import pygame
+            pygame.mixer.quit()
     print('演示结束，身体已停止。', flush=True)
 
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--prepare', action='store_true')
-    parser.add_argument('--port', default='/dev/cu.usbmodem1401')
-    parser.add_argument('--relay-active', choices=['HIGH', 'LOW'], default='HIGH')
+    parser.add_argument('--port', default=None, help='默认读取 parameters.toml 的 system.serial.port')
+    parser.add_argument('--relay-active', choices=['HIGH', 'LOW'], default=None)
     parser.add_argument('--countdown', type=int, default=10)
     parser.add_argument('--directory', type=Path, default=ROOT / 'work' / 'performance-audio')
     args = parser.parse_args()
