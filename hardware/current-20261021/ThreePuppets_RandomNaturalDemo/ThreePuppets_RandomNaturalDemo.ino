@@ -5,7 +5,7 @@ PuppetEyes eyes;
 // 0=眨眼+快，1=不眨眼+快，2=眨眼+缓慢，3=不眨眼+缓慢。
 byte deck[12];
 byte nextCard = 12;
-bool playing = true;
+bool playing = false; // 开机先暂停，串口发送G开始。
 bool waiting = false;
 bool reshuffle = false;
 unsigned long waitStarted = 0;
@@ -32,7 +32,7 @@ void setup() {
   // A2未接线，用于给随机顺序提供种子。
   randomSeed(analogRead(A2) ^ micros());
   eyes.begin();
-  Serial.println("Random demo: G play, P pause after current action, T reshuffle");
+  Serial.println("PAUSED. G play, P pause after current action, T reshuffle and play");
 }
 
 void loop() {
