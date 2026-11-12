@@ -1,3 +1,13 @@
+## 本机启动（已修复）
+
+双击根目录的 `启动中文版.command` 或 `启动英文版.command`。也可以在终端运行 `./scripts/run.command` 或 `./scripts/run.command --config config.en.toml`。停止时按 Ctrl-C。
+
+运行环境固定保存在 `~/.cache/echo-chamber/venv/`，不受 iCloud 按需下载影响。启动脚本会检查依赖清单，首次启动或清单变化时自动安装依赖；Python 需为 3.12 或更新版本，也可用 `ECR_PYTHON` 指定解释器。依赖以 `requirements.txt` 为准，包含实时转写所需的 `openai[realtime]`。
+
+中文版使用 `state/`，英文版使用 `state-en/`，默认启动保留记忆。仅在明确需要清空时使用 `--reset all --seed`。
+
+本机 `.venv` 链接到上述本地环境；原有失效环境保存在 `work/venv-before-startup-fix-20261111/`，用于回溯，程序不再读取它。不要复制虚拟环境到其他电脑；在新电脑用启动脚本重新建立。
+
 # Echo Chamber Realms
 
 **An interactive art installation by [Hu Di](https://hudiworks.com/), first exhibited in April 2024.**

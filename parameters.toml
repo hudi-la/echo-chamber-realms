@@ -130,7 +130,7 @@ visitor_timeout = 75
 visitor_hard_timeout = 300
 
 [profiles.zh.memory]
-reset_on_start = true
+reset_on_start = false
 ruminate_every = 30
 bedtime_min_heard = 8
 belief_capacity = 6
