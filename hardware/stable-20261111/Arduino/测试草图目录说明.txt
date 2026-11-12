@@ -1,0 +1,103 @@
+Arduino 草图核查与目录说明（2026-10-20）
+
+核查依据：逐份读取工作区全部自有 .ino 文件，并记录文件及文件夹修改时间；libraries 为第三方库，不归入项目重命名。
+重命名不改变 .ino 内容或其修改时间；文件夹修改时间会因重命名变化，不能单独代表项目时间。
+先前由我编辑的三角色程序、目录说明、鸟参数记录的修改时间已被更新，不能用来推断原始年代。
+角色归属未从代码得到确认的旧草图只按实际控制功能命名。Servo4 表示代码控制四路舵机，不指定角色。
+
+本次整理的测试草图：
+
+Servo_CenterSmallSwing_20261011
+  草图修改时间：2026-10-11 10:38:34
+  原名：backto0
+  代码实际功能：单舵机 D9；1500→1400→1600→1500，直接切换，只执行一次
+
+Servo_RangeCalibration_20261020
+  草图修改时间：2026-10-20 16:48:06
+  原名：testrange
+  代码实际功能：一个 Servo 对象逐个选择 D9/D10；串口微调、记录 A/B 端点；目前代码包含此前本聊天的修改
+
+Servo4_Combination_Slow_20261012
+  草图修改时间：2026-10-12 13:51:08
+  原名：test combinayion range
+  代码实际功能：四路 D9/D10/D5/D6；四角视线及眼皮闭合组合，72 步，2.5 秒缓动；e 启用、n 下一步
+
+Servo4_GazeLids_Slow_20261012
+  草图修改时间：2026-10-12 14:15:26
+  原名：slowaction（更早曾显示为 slow action）
+  代码实际功能：四路 D9/D10/D5/D6；八方向视线及眼皮跟随，16 步，5 秒缓动；含开机回正
+
+Servo4_NaturalMotion_Slow_20261012
+  草图修改时间：2026-10-12 14:41:03
+  原名：NaturalEyeMovementShow
+  代码实际功能：四路 D9/D10/D5/D6；八方向视线、部分动作眨眼、放松姿态，含缓动；g 启动一轮
+
+ThreePuppets_AllServos_Direct
+  草图修改时间：2026-10-20（本聊天创建/编辑）
+  原名：ThreePuppetsGentleTest
+  代码实际功能：三角色当前接线，11 路逐个正负50微秒测试，无缓动；T 重跑
+
+ThreePuppets_NaturalMotion_Direct
+  草图修改时间：2026-10-20（本聊天创建/编辑）
+  原名：新建
+  代码实际功能：三角色联合眨眼及睁眼看左上，老鼠向左；无缓动，T 重跑；老鼠开1450/闭2000
+
+其他项目：保留或恢复原名，不并入本次三角色测试：
+about servo：2024-01-03；单舵机 D7，0/180 度切换及20度分段扫描。已从我误改的 SingleServo_FullSweep_Legacy 恢复原名。
+about_leds：2024-01-03；D7/D8 两灯每秒同时亮灭。
+camera_dancing_project：2023-05-03；D12 舵机，长时间定时动作及三按钮/LED控制。
+camera_project_about_microphone：保留原目录；包含双/四通道麦克风采样、串口舵机控制及空草图。各文件时间见下方。
+puppet_gpt_project：2024-04-09；串口1至6控制 D2/D3/D4 高低电平，Servo 控制已注释。
+redlightstill：2023-03-01；D13 LED常亮。
+camera_project_about_servo：空目录，保留。
+DogEyeCalibration：保留原名；含鸟、狗参数记录，其中旧接线为历史记录。
+
+当前三角色接线：鸟眼皮 A0/A1、上下D2、左右D3；狗眼皮D4/D5、上下D6、左右D7；老鼠左右D8、眼皮D9、抬头D10。
+旧四路草图的引脚与当前三角色接线不同。
+
+核查时的原路径与修改时间（重命名前；本地时间 America/Los_Angeles）：
+2026-10-20T17:32:18 | 目录 | DogEyeCalibration
+2026-10-14T13:06:02 | 文件 | DogEyeCalibration/狗用眼睛_行程测量记录.txt
+2026-10-20T17:32:16 | 文件 | DogEyeCalibration/鸟眼睛舵机_最后使用参数_2026-10-14.txt
+2026-10-20T17:31:38 | 目录 | SingleBird_CombinationTest_Slow
+2026-10-12T13:51:08 | 文件 | SingleBird_CombinationTest_Slow/SingleBird_CombinationTest_Slow.ino
+2026-10-20T17:31:46 | 目录 | SingleBird_GazeAndLids_Slow
+2026-10-12T14:15:26 | 文件 | SingleBird_GazeAndLids_Slow/SingleBird_GazeAndLids_Slow.ino
+2026-10-20T17:31:38 | 目录 | SingleBird_NaturalMotion_Slow
+2026-10-12T14:41:03 | 文件 | SingleBird_NaturalMotion_Slow/SingleBird_NaturalMotion_Slow.ino
+2026-10-20T17:31:38 | 目录 | SingleServo_CenterAndSmallSwing
+2026-10-11T10:38:34 | 文件 | SingleServo_CenterAndSmallSwing/SingleServo_CenterAndSmallSwing.ino
+2026-10-20T17:31:38 | 目录 | SingleServo_FullSweep_Legacy
+2024-01-03T21:11:50 | 文件 | SingleServo_FullSweep_Legacy/SingleServo_FullSweep_Legacy.ino
+2026-10-20T17:31:38 | 目录 | SingleServo_RangeCalibration
+2026-10-20T16:48:06 | 文件 | SingleServo_RangeCalibration/SingleServo_RangeCalibration.ino
+2026-10-20T17:31:38 | 目录 | ThreePuppets_AllServos_Direct
+2026-10-20T17:14:05 | 文件 | ThreePuppets_AllServos_Direct/ThreePuppets_AllServos_Direct.ino
+2026-10-20T17:32:56 | 目录 | ThreePuppets_NaturalMotion_Direct
+2026-10-20T17:32:54 | 文件 | ThreePuppets_NaturalMotion_Direct/ThreePuppets_NaturalMotion_Direct.ino
+2026-04-29T16:52:57 | 目录 | about_leds
+2024-01-03T20:45:16 | 文件 | about_leds/about_leds.ino
+2026-04-29T16:53:16 | 目录 | camera_dancing_project
+2023-05-03T17:31:21 | 文件 | camera_dancing_project/camera_dancing_project.ino
+2026-04-29T16:53:26 | 目录 | camera_project_about_microphone
+2026-04-29T16:53:26 | 目录 | camera_project_about_microphone/about
+2023-04-05T15:50:51 | 文件 | camera_project_about_microphone/about/about.ino
+2026-04-29T16:53:16 | 目录 | camera_project_about_microphone/about servo
+2023-04-05T15:51:51 | 文件 | camera_project_about_microphone/about servo/about servo.ino
+2026-04-29T16:53:06 | 目录 | camera_project_about_microphone/about_microphone
+2024-01-03T21:41:24 | 文件 | camera_project_about_microphone/about_microphone/about_microphone.ino
+2026-04-29T16:53:06 | 目录 | camera_project_about_microphone/about_servo
+2023-04-05T15:46:57 | 文件 | camera_project_about_microphone/about_servo/about_servo.ino
+2026-04-29T16:53:26 | 目录 | camera_project_about_microphone/sketch_nov30a
+2022-12-02T16:47:46 | 文件 | camera_project_about_microphone/sketch_nov30a/sketch_nov30a.ino
+2026-04-29T16:52:15 | 目录 | camera_project_about_servo
+2026-04-29T16:53:16 | 目录 | puppet_gpt_project
+2024-04-09T12:03:31 | 文件 | puppet_gpt_project/puppet_gpt_project.ino
+2026-04-29T16:53:06 | 目录 | redlightstill
+2023-03-01T16:15:00 | 文件 | redlightstill/redlightstill.ino
+2026-10-20T17:32:54 | 文件 | 测试草图目录说明.txt
+
+2026-10-20 现场方向确认：新三角色自然测试统一按木偶本人视角；鸟左2050/上2150，狗左2000/上1900，老鼠左1300。旧草图保留历史逻辑，不追溯修改。
+
+ThreePuppets_RandomNaturalDemo：2026-10-20新建，三角色眼睛随机自然动作，眨眼/不眨眼×直接/缓慢四模式，每角色每轮均展示；P暂停、G继续、T重新洗牌。
+libraries/PuppetEyes：本项目的可复用眼睛驱动（非第三方库），配套使用说明见库目录。

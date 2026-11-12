@@ -1,0 +1,210 @@
+[
+  {
+    "path": "Arduino/ECRCalibrationData/狗用眼睛_行程测量记录.txt",
+    "sha256": "2a7031094bf42530a6c44e7fe1970ce583c13936b56525c7f47badad5ef537ea"
+  },
+  {
+    "path": "Arduino/ECRCalibrationData/鸟眼睛舵机_最后使用参数_2026-10-14.txt",
+    "sha256": "8e0c8b27bcc0811e4d64a29ac19f9414ab92e8298e8251c8f9fba4f415c3fd10"
+  },
+  {
+    "path": "Arduino/Servo4_Combination_Slow_20261012/Servo4_Combination_Slow_20261012.ino",
+    "sha256": "12dcaeb42be62f5731060649822e086d0bf0c29523a9112d2526cca0500b22c5"
+  },
+  {
+    "path": "Arduino/Servo4_GazeLids_Slow_20261012/Servo4_GazeLids_Slow_20261012.ino",
+    "sha256": "267966874029759ff5b62bdb7db578157b74e4e6ed2d8a75af65997b5e3e94e1"
+  },
+  {
+    "path": "Arduino/Servo4_NaturalMotion_Slow_20261012/Servo4_NaturalMotion_Slow_20261012.ino",
+    "sha256": "08738106d935005d82a65159aa44bd4c2f96171b6d1bbae07281c2fbbe10f422"
+  },
+  {
+    "path": "Arduino/Servo_CenterSmallSwing_20261011/Servo_CenterSmallSwing_20261011.ino",
+    "sha256": "b7c9bdb0211fda6b7c079ace99f3a07fcbf0f330a2cd4ac0b2705686df9c45ca"
+  },
+  {
+    "path": "Arduino/Servo_RangeCalibration_20261020/Servo_RangeCalibration_20261020.ino",
+    "sha256": "30d732e155f26febe162f4ae50c2becf971a666921126e91ff8306891450fb8c"
+  },
+  {
+    "path": "Arduino/ThreePuppets_NaturalMotion_lookleftup/ThreePuppets_NaturalMotion_lookleftup.ino",
+    "sha256": "d530016edf041170ef4a23ee8832dbb45ab6bf5f3556aaa934c44781b9175cf6"
+  },
+  {
+    "path": "Arduino/ThreePuppets_RandomNaturalDemo/ThreePuppets_RandomNaturalDemo.ino",
+    "sha256": "7ef314d4d9706b0c2ac4b62d7ff17adbce52bf74e3310c709fedacb4e35f6833"
+  },
+  {
+    "path": "Arduino/ThreePuppets_return0/ThreePuppets_return0.ino",
+    "sha256": "093aa5e0532139e700f357a51c1195e05110e7cc9ae02282a68fa367ab327bfb"
+  },
+  {
+    "path": "Arduino/about servo/about servo.ino",
+    "sha256": "8bdc87426236c65b43512e57ec805f3f43ed963524d8552c17562becf3f66f0d"
+  },
+  {
+    "path": "Arduino/about_leds/about_leds.ino",
+    "sha256": "702b96c787cd2bba0bd74a3ba97b81505f24e09d8ee87b315054acaddd30d6db"
+  },
+  {
+    "path": "Arduino/camera_dancing_project/camera_dancing_project.ino",
+    "sha256": "1014bc650fbcb1c7d7d237d2655676df0ef2e836482e05551b01194bfca65f13"
+  },
+  {
+    "path": "Arduino/camera_project_about_microphone/about/about.ino",
+    "sha256": "2320e99207d24a5cc7d093c4124bd927f5771d37ea581aacc874a92a72cb97c6"
+  },
+  {
+    "path": "Arduino/camera_project_about_microphone/about servo/about servo.ino",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "path": "Arduino/camera_project_about_microphone/about_microphone/about_microphone.ino",
+    "sha256": "bdfc12a3da1b6b509cd3093aa901e98bdfde7e12ef82a0733e79a5bbbcf464d6"
+  },
+  {
+    "path": "Arduino/camera_project_about_microphone/about_servo/about_servo.ino",
+    "sha256": "4490fbb6bf973313e9cf50cf575386587a7ade6a50da6337b7f56fda99dbce30"
+  },
+  {
+    "path": "Arduino/camera_project_about_microphone/sketch_nov30a/sketch_nov30a.ino",
+    "sha256": "560d5cbe5ef64b7373ab53e24f9ccc97c463e85faeb9a093c4a247653847cae7"
+  },
+  {
+    "path": "Arduino/libraries/AVR_Slow_PWM/CONTRIBUTING.md",
+    "sha256": "2ec4d2b989fdc295d8248460b33be7ae7f28f34bba5eae79488cffbbae13199f"
+  },
+  {
+    "path": "Arduino/libraries/AVR_Slow_PWM/LICENSE",
+    "sha256": "b2e5b1dbcc8e78518de7b87ed334669dc282d74ea9492276ee8f77767e305e59"
+  },
+  {
+    "path": "Arduino/libraries/AVR_Slow_PWM/README.md",
+    "sha256": "15b6e8e4313ec87a39ce03a4bfe9102642b293eeae6d03c4782372b417eebb29"
+  },
+  {
+    "path": "Arduino/libraries/AVR_Slow_PWM/changelog.md",
+    "sha256": "a7daf5e2a7cfad42930664cc1d7f15da52f545dc9e5786011383ce69de00d60b"
+  },
+  {
+    "path": "Arduino/libraries/AVR_Slow_PWM/examples/ISR_8_PWMs_Array/ISR_8_PWMs_Array.ino",
+    "sha256": "1fae6296468a47386ff4f0e83170686ffab0b1d4ece3e86f3c00fe67ab16fd71"
+  },
+  {
+    "path": "Arduino/libraries/AVR_Slow_PWM/examples/ISR_8_PWMs_Array_Complex/ISR_8_PWMs_Array_Complex.ino",
+    "sha256": "a881ad4a6caefc276dd12c0b2e75292fec68013c278552b80c76acb8b81703d6"
+  },
+  {
+    "path": "Arduino/libraries/AVR_Slow_PWM/examples/ISR_8_PWMs_Array_Simple/ISR_8_PWMs_Array_Simple.ino",
+    "sha256": "ef6945e8ee477dab87836965b0e4cf40a0323043131453bb20a1403d03f07a2f"
+  },
+  {
+    "path": "Arduino/libraries/AVR_Slow_PWM/examples/ISR_Changing_PWM/ISR_Changing_PWM.ino",
+    "sha256": "899d847ba0631e7088b5211d49c341a205eac3a11039055c26d68efb4f8ba71f"
+  },
+  {
+    "path": "Arduino/libraries/AVR_Slow_PWM/examples/ISR_Modify_PWM/ISR_Modify_PWM.ino",
+    "sha256": "bafaf2383efa40276a460c8881deefec92c0b75a76aaaf55431604dc1425ef00"
+  },
+  {
+    "path": "Arduino/libraries/AVR_Slow_PWM/examples/multiFileProject/multiFileProject.cpp",
+    "sha256": "9317572a98d13192bbb0e3246e5edeeba3da003eb4b186c16e8782fb82019923"
+  },
+  {
+    "path": "Arduino/libraries/AVR_Slow_PWM/examples/multiFileProject/multiFileProject.h",
+    "sha256": "5a0753638296a77ff4bd397a00ba46ad40e8937c0d10ac5041b85ed0d503cf8a"
+  },
+  {
+    "path": "Arduino/libraries/AVR_Slow_PWM/examples/multiFileProject/multiFileProject.ino",
+    "sha256": "69d161a095acc86b153c45a331999755e6be43a90b1c510e7be3d10c8b09b318"
+  },
+  {
+    "path": "Arduino/libraries/AVR_Slow_PWM/keywords.txt",
+    "sha256": "39ca0933d3896bd92b65c84737798c9d62de76245283c9d54ee8c50c262755ca"
+  },
+  {
+    "path": "Arduino/libraries/AVR_Slow_PWM/library.json",
+    "sha256": "f767e79c5e4c9b56b4de8131ef9c78330ce880fb87c4abc843be7773d5ff473e"
+  },
+  {
+    "path": "Arduino/libraries/AVR_Slow_PWM/library.properties",
+    "sha256": "8c2438651732b8befd34f57d8ae73e4f0c986c1f4f27a78ae29d75b8fe416547"
+  },
+  {
+    "path": "Arduino/libraries/AVR_Slow_PWM/platformio/platformio.ini",
+    "sha256": "dd496b22c5d144b1a180c2dd3518be0479728b570e2da84893b3bd1242975b78"
+  },
+  {
+    "path": "Arduino/libraries/AVR_Slow_PWM/src/AVR_Slow_PWM.h",
+    "sha256": "4612dadd28928657a9722a0c1fd16a446de74f144eb84d1e1aebf509f14005b7"
+  },
+  {
+    "path": "Arduino/libraries/AVR_Slow_PWM/src/AVR_Slow_PWM.hpp",
+    "sha256": "5832e84dd19d5903b87ab0540a6e6f179123c592ac7c83e8890707519e9f0fa7"
+  },
+  {
+    "path": "Arduino/libraries/AVR_Slow_PWM/src/AVR_Slow_PWM_ISR.h",
+    "sha256": "736ed29f57063d94d780cd56ddcbfb7b69ae4f056d61e1c1ff91d8ab6392a292"
+  },
+  {
+    "path": "Arduino/libraries/AVR_Slow_PWM/src/AVR_Slow_PWM_ISR.hpp",
+    "sha256": "853aaa8b3b60d8267aca5dfdb63054a965c850bb1f52f060d8400d852dd1531c"
+  },
+  {
+    "path": "Arduino/libraries/AVR_Slow_PWM/src/AVR_Slow_PWM_ISR_Impl.h",
+    "sha256": "98424eaf8331450f09b3e635fcb3d06c1e1581b1d46ef55830140ec0aba64eae"
+  },
+  {
+    "path": "Arduino/libraries/AVR_Slow_PWM/src/AVR_Slow_PWM_Impl.h",
+    "sha256": "c05b1d9fddbcb0aac4a920c6fb4830c00a5c1cd5446f5705cd5910a0a78dfd09"
+  },
+  {
+    "path": "Arduino/libraries/AVR_Slow_PWM/src/PWM_Generic_Debug.h",
+    "sha256": "4d9789fbdfd9d11edcb12ef7b0bc3021b2671f33fc12e2799633c5b3d7ac0378"
+  },
+  {
+    "path": "Arduino/libraries/PuppetEyes/library.properties",
+    "sha256": "ca7c77db631a77e01430e091baaa47c0677df1c9ce58ccc5c0a54c40737f6ec4"
+  },
+  {
+    "path": "Arduino/libraries/PuppetEyes/src/PuppetEyes.cpp",
+    "sha256": "bb7acb5dcb0d37358f77f6d3cf92ae4986eb63d93fb3345787ae3e8d99e97090"
+  },
+  {
+    "path": "Arduino/libraries/PuppetEyes/src/PuppetEyes.h",
+    "sha256": "89eb3fcf56c0d11dbb86c8d11d695628c97565a0a2648c6227cb6e111e054fcb"
+  },
+  {
+    "path": "Arduino/libraries/PuppetEyes/使用说明.txt",
+    "sha256": "3598e7a4410e29d8956d64f77a0ec9c3daf6ef92ac5430842a2b2c5f35fb654f"
+  },
+  {
+    "path": "Arduino/puppet_gpt_project/puppet_gpt_project.ino",
+    "sha256": "e36c8e02cc3583d45c43fb9704a37340e482d6ef85e5b434f4c8999894ea1615"
+  },
+  {
+    "path": "Arduino/redlightstill/redlightstill.ino",
+    "sha256": "fcc7b71aac084c127d2b5a72e324a4d9b9679cc21e2836949809a963850029a1"
+  },
+  {
+    "path": "Arduino/测试草图目录说明.txt",
+    "sha256": "82faeadf2fd2150f7c7b773945b48f776b7c93ea432af1e3b455636606a376ec"
+  },
+  {
+    "path": "historical-records/狗鸟鼠_统一接线记录.txt",
+    "sha256": "f82095d95dc190434494fa1356c3deae010e6cf77016b0166b7aa15cdf424124"
+  },
+  {
+    "path": "historical-records/老鼠_行程测量记录.txt",
+    "sha256": "4cbb33335c77b5cb6976d3c9cf6783d2adfb64aa0c52f53ecb8df27661996a6d"
+  },
+  {
+    "path": "historical-records/鸟用眼睛_行程测量记录.txt",
+    "sha256": "fe57ea4115f713cd6a82b5a041e2af7d6ef734b7c9128f19af127c27c0c9aca8"
+  },
+  {
+    "path": "historical-records/狗用眼睛_行程测量记录.txt",
+    "sha256": "bd13dbca853c6dea28fe11301ae7c7a12c5b35c86dc55c64731b15c762a6eaef"
+  }
+]
