@@ -58,3 +58,27 @@ transcriptContext.onMessage({type: 'hearing', text: ''});
 assert.equal(draft.removed, true);
 assert.equal(transcriptContext.live['新朋友'], undefined);
 console.log('Provisional transcript cleanup passed');
+
+// Verify actual PCM output levels and silent opposite channels for each puppet.
+const pcmContext = {
+  audio: {ctx: {createBuffer(channels, length, sr) {
+    const data = Array.from({length: channels}, () => new Float32Array(length));
+    return {numberOfChannels: channels, sampleRate: sr, getChannelData: i => data[i]};
+  }}},
+  atob: s => Buffer.from(s, 'base64').toString('binary'),
+  Uint8Array, Int16Array, Math,
+};
+vm.createContext(pcmContext);
+vm.runInContext(script.slice(script.indexOf('  function pcmToBuffer'), script.indexOf('  function playPcm')), pcmContext);
+const pcm = Buffer.alloc(4);
+pcm.writeInt16LE(16384, 0);
+pcm.writeInt16LE(-16384, 2);
+for (const [name, gains] of [['Charlie', [1, 0]], ['Kaka', [0, 1]], ['Lucy', [0.5, 0.5]]]) {
+  const buffer = pcmContext.pcmToBuffer(pcm.toString('base64'), 24000, gains);
+  assert.equal(buffer.numberOfChannels, 2);
+  assert.equal(buffer.sampleRate, 24000);
+  gains.forEach((gain, channel) => {
+    assert.deepEqual(Array.from(buffer.getChannelData(channel)), [0.5 * gain, -0.5 * gain], name);
+  });
+}
+console.log('Puppet stereo PCM: dog left, bird right, mouse 50% each passed');

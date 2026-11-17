@@ -175,5 +175,5 @@ void PuppetEyes::update() {
 }
 
 void PuppetEyes::head(int microseconds) {
-  if (ready) motors[10].writeMicroseconds(constrain(microseconds, 1500, 1650));
+  if (ready) motors[10].writeMicroseconds(constrain(microseconds, 1500, 1700));
 }

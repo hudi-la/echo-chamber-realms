@@ -52,3 +52,7 @@ Python等待READY才发送眼睛动作，等待OK CONFIG才发送身体动作；
 固定有声预览：`.venv/bin/python -m echo.performance_preview --countdown 5`。复用work/performance-audio中已有三句缓存，不调用模型或TTS、不修改角色记忆；缓存缺失时不会自动生成。macOS使用内置afplay播放，无需pygame；以本地播放进程启动为时间基准，没有浏览器的play_started回执。正式主程序仍使用浏览器确认播放开始后再动作。可使用--port、--relay-active覆盖配置。
 
 回退到独立眼睛演示时，使用stable-2026-11-11-before-dialogue-motion快照内草图与库重新烧录；如仅想关闭主程序硬件，设system.serial.port=""、relay_active=""后重启。
+
+## 2026-11-11 老鼠点头幅度调整
+
+用户反馈50μs幅度几乎不可见，要求200–300μs。先采用200μs：D10点头1500→1700→1500，驱动限幅同步改为1500–1700μs；单程650ms不变，续租期间连续往返。新增行程尚待现场验证，不代表已经完成机械端点标定。

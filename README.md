@@ -10,6 +10,8 @@
 
 当前已连接 UNO 的眼睛与身体动作：启动前关闭 Arduino IDE 串口监视器，双击中／英文启动入口，并在声音页面启用音频。实际播放时驱动说话角色，播放结束或打断后停止身体。端口和触发电平在 `parameters.toml` 的 `[system.serial]`，目前为 `/dev/cu.usbmodem31401`、`HIGH`。Arduino 已使用串口表演固件，旧随机演示的 G/P/T 不适用；退出主程序用 Ctrl-C。固定缓存台词测试与回退说明见 [硬件说明](docs/hardware/performance-trial.zh.md)。
 
+声音按现场位置输出双声道：狗 Charlie 为左 100%／右 0%，鸟 Kaka 为左 0%／右 100%，老鼠 Lucy 为左右各 50%。中英文版共用此布局，比例在 `parameters.toml` 的 `mouth.pan` 中设置。更新后刷新声音页面；电脑输出需选择连接两个音响的立体声设备，并关闭系统的单声道音频。
+
 # Echo Chamber Realms
 
 **An interactive art installation by [Hu Di](https://hudiworks.com/), first exhibited in April 2024.**

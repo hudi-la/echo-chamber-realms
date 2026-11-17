@@ -7,7 +7,7 @@ byte used = 0;
 bool overflowed = false, configured = false, activeLow = false;
 unsigned long contact = 0, until[3] = {0,0,0};
 // Existing hardware: mouse head servo on D10; dog remains relay-driven on D13.
-const int HEAD_CENTER = 1500, HEAD_DOWN = 1550;
+const int HEAD_CENTER = 1500, HEAD_DOWN = 1700;
 const unsigned long HALF_NOD_MS = 650;
 unsigned long nodStarted = 0;
 bool wasBusy[3] = {false,false,false};

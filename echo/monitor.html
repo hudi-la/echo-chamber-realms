@@ -521,12 +521,16 @@
   const RATE = 24000;
   const audio = { on: false, ctx: null, stream: null, proc: null, sources: [] };
 
-  function pcmToBuffer(b64, sr) {
+  function pcmToBuffer(b64, sr, pan) {
     const bytes = Uint8Array.from(atob(b64), c => c.charCodeAt(0));
     const i16 = new Int16Array(bytes.buffer, bytes.byteOffset, bytes.byteLength >> 1);
-    const buf = audio.ctx.createBuffer(1, i16.length, sr);
-    const ch = buf.getChannelData(0);
-    for (let i = 0; i < i16.length; i++) ch[i] = i16[i] / 32768;
+    // Explicit channel gains: dog [1, 0], bird [0, 1], mouse [0.5, 0.5].
+    const buf = audio.ctx.createBuffer(2, i16.length, sr);
+    for (let channel = 0; channel < 2; channel++) {
+      const ch = buf.getChannelData(channel);
+      const gain = Math.max(0, Math.min(1, pan[channel]));
+      for (let i = 0; i < i16.length; i++) ch[i] = i16[i] / 32768 * gain;
+    }
     return buf;
   }
   function playPcm(m) {
@@ -534,13 +538,8 @@
       audioAck("play_error", m.id); return;
     }
     const src = audio.ctx.createBufferSource();
-    src.buffer = pcmToBuffer(m.pcm, m.sr);
-    const [l, r] = m.pan;                        // [左, 右] 音量 → 声像 -1..1
-    const pan = audio.ctx.createStereoPanner();
-    pan.pan.value = Math.max(-1, Math.min(1, r - l));
-    const gain = audio.ctx.createGain();
-    gain.gain.value = Math.max(l, r);
-    src.connect(pan).connect(gain).connect(audio.ctx.destination);
+    src.buffer = pcmToBuffer(m.pcm, m.sr, m.pan);
+    src.connect(audio.ctx.destination);
     src.onended = () => {
       audio.sources = audio.sources.filter(s => s !== src);
       audioAck(src.cancelled ? "play_error" : "play_ended", m.id);
