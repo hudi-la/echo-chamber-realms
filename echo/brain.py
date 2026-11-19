@@ -1,6 +1,8 @@
-"""木偶的脑子。四个动作：decide（要不要开口）、compose（说什么）、ruminate（有没有分量够的事让我改信念）、
-seed（出厂信念）。两家实现（Claude / OpenAI），同一个接口。调用失败 = 这一轮不开口 / 这一次不反刍，绝不把房间卡住。
-提示词的文字在 prompts.py，这里只有 JSON 格式（schema）和调用。"""
+"""木偶的模型接口：当前主流程调用 compose 写台词，think 独立生成简短的角色私下状态。
+
+反刍与初始化接口按配置保留；decide 及其感受/意图字段仅供旧接口和测试兼容，
+不参与当前主流程。提示词正文在 prompts.txt，加载逻辑在 prompts.py。
+"""
 
 from .settings import parameter, rule
 import json
@@ -21,8 +23,8 @@ class Decision:
     """Live decision uses speak only; other fields remain for old test doubles."""
     speak: bool
     text: str = ""      # 只有测试用的假脑子会预先带台词；真脑子留空，由 compose 填
-    feeling: str = ""   # 它此刻的感受（私下的，别人听不到）
-    intent: str = ""    # 它这次想达到什么（私下的）
+    feeling: str = ""   # 旧接口兼容；当前流程不生成
+    intent: str = ""    # 旧接口兼容；当前流程不生成
 
 
 SILENT = Decision(False)
@@ -51,10 +53,33 @@ class Seed:
 
 
 class Brain(Protocol):
+    async def think(self, system: str, situation: str) -> "PrivateThought | None": ...
     async def decide(self, system: str, situation: str) -> Decision: ...
     async def compose(self, system: str, situation: str, decision: Decision) -> str: ...
     async def ruminate(self, system: str, material: str, capacity: int) -> Rumination | None: ...
     async def seed(self, system: str, material: str) -> Seed | None: ...
+
+
+@dataclass(frozen=True)
+class PrivateThought:
+    feeling: str
+    intent: str
+
+
+THOUGHT_SCHEMA = {
+    "type": "object",
+    "properties": {"feeling": {"type": "string"}, "intent": {"type": "string"}},
+    "required": ["feeling", "intent"], "additionalProperties": False,
+}
+
+
+def parse_thought(text: str) -> PrivateThought | None:
+    data = json.loads(text)
+    if not isinstance(data, dict) or any(not isinstance(data.get(k), str) for k in ("feeling", "intent")):
+        raise ValueError("private thought requires feeling and intent strings")
+    limit = parameter("thoughts.max_chars")
+    feeling, intent = (data[k].strip()[:limit] for k in ("feeling", "intent"))
+    return PrivateThought(feeling, intent) if feeling or intent else None
 
 
 DECISION_SCHEMA = {
@@ -195,6 +220,17 @@ class ClaudeBrain:
             return None
         return next((b.text for b in r.content if b.type == "text"), None)
 
+    async def think(self, system: str, situation: str) -> PrivateThought | None:
+        system = catalog(getattr(self, "language", "zh"))["thought_system"] + "\n\n" + system
+        text = await self._json(self.model, system, situation, THOUGHT_SCHEMA, parameter("model.anthropic_thought_tokens"))
+        if text is None:
+            return None
+        try:
+            return parse_thought(text)
+        except (ValueError, TypeError) as error:
+            log.warning("解析 private thought 失败: %s", error)
+            return None
+
     async def decide(self, system: str, situation: str) -> Decision:
         text = await self._json(self.model, system, situation + "\n\n" + catalog(getattr(self, "language", "zh"))["decide"], DECISION_SCHEMA, parameter("model.anthropic_decide_tokens"))
         if text is None:
@@ -274,6 +310,17 @@ class OpenAIBrain:
             log.warning("回复未完成 (%s)", r.status)
             return None
         return r.output_text or None
+
+    async def think(self, system: str, situation: str) -> PrivateThought | None:
+        system = catalog(getattr(self, "language", "zh"))["thought_system"] + "\n\n" + system
+        text = await self._json(self.model, system, situation, THOUGHT_SCHEMA, "private_thought", parameter("model.openai_thought_tokens"))
+        if text is None:
+            return None
+        try:
+            return parse_thought(text)
+        except (ValueError, TypeError) as error:
+            log.warning("解析 private thought 失败: %s", error)
+            return None
 
     async def decide(self, system: str, situation: str) -> Decision:
         text = await self._json(self.model, system, situation + "\n\n" + catalog(getattr(self, "language", "zh"))["decide"], DECISION_SCHEMA, "decision", parameter("model.openai_decide_tokens"))

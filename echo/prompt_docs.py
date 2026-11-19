@@ -26,17 +26,22 @@ def render(language):
     add(('''| 用途 | 角色背景部分 | 本次任务部分 | 输出 |
 | --- | --- | --- | --- |
 | 程序选人 | 无模型请求 | 事件、点名、上次发言者 | 获选角色 |
-| 写台词 | 身份＋个人历史＋策略＋环境＋当前信念 | 获选时的现场快照＋写台词要求 | text |
+| 写台词 | 身份＋个人历史＋策略＋环境＋当前信念 | 获选时的现场快照＋仅自己的近期私下状态＋写台词要求 | text＋performance（target、tone） |
+| 后台内心 | 同上 | 已完成的公共对话＋当前说话者＋仅自己的近期私下状态 | feeling＋intent |
 | 反刍 | 同上 | 自上次成功反刍以来未消化的实际对话＋反刍场景＋反刍要求 | 信念变化 |
 | 初始化 | 语言目录中审定的初始信念 | 仅为空白信念安装预设，无模型请求 | 初始信念存盘 |
 | 配音 | 对应角色的声音要求 | 已生成的台词；音色、移调和声道由配置指定 | 音频 |''' if zh else '''| Use | Character background | Task input | Output |
 | --- | --- | --- | --- |
 | Select speaker in code | No model request | Event, opening address and last speaker | Selected character |
-| Compose dialogue | Identity + history + strategies + environment + current beliefs | The situation snapshot at selection + composition task | text |
+| Compose dialogue | Identity + history + strategies + environment + current beliefs | The situation snapshot at selection + only own recent private states + composition task | text + performance (target, tone) |
+| Background private state | Same background | Completed public dialogue + current speaker + only own recent private states | feeling + intent |
 | Reflect | Same background | Unprocessed actual dialogue since the last successful reflection + review context + reflection task | Belief changes |
 | Initialize | Reviewed initial beliefs in the language catalog | Install presets for blank beliefs only; no model request | Saved initial beliefs |
 | Synthesize speech | Character voice instructions | Generated dialogue; voice, pitch and channel settings come from configuration | Audio |'''))
     add('短期窗口 N 由 room.window 配置，当前为 24。每条现场记录包含说话者和说出的内容；被打断时只记实际说出的部分，并标记打断。不是只取人类的话。' if zh else 'The short-term window N is room.window, currently 24. Events include the speaker and spoken content; interruptions include only the estimated spoken prefix and an interruption marker. The window includes puppet dialogue as well as human speech.')
+    add('独立内心任务：每个角色最多一个请求在途，完成对话或说话开始事件触发，短时间内事件合并。台词生成、播放和选人不等待内心结果；请求失败或超时不阻塞对话，退出时取消在途请求。只用完成的公开台词，不把其他角色尚未说完的完整台词提前传入。private_thoughts 按角色落盘，最多保留 8 条，situation 只取自己的最近 3 条；每个 feeling / intent 最多 240 字符。新结果只影响之后创建的请求，不回填已在生成的台词。开关为 rules.toml 的 memory.private_thoughts_enabled；容量与超时在 parameters.toml 的 system.thoughts / system.model。长期信念反刍保持关闭，旧 thoughts/unspoken 字段不重新启用。' if zh else 'Independent private-state task: at most one request per character, triggered by completed dialogue or speaking-start events; nearby events are coalesced. Selection, composition and playback never await it. Failure or timeout does not block dialogue; in-flight tasks are cancelled at shutdown. Only completed public lines are included, never another character’s unheard full line. Persist private_thoughts per character (8 entries); situation includes only that character’s latest 3, with each feeling/intent capped at 240 characters. New results affect future request snapshots only. The switch is memory.private_thoughts_enabled in rules.toml; limits and timeout are in system.thoughts / system.model in parameters.toml. Long-term reflection remains disabled; legacy thoughts/unspoken are not re-enabled.')
+    block(d['thought_system'])
+    block(d['private_heading'])
     add('### 旧版对照 仅用于理解迁移' if zh else '### Previous design for migration reference only')
     add(('''| 用途 | 角色背景部分 | 本次任务部分 |
 | --- | --- | --- |
@@ -64,7 +69,7 @@ def render(language):
     block(d['persona_template'] + '\n\n' + d['belief_heading'] + '\n{current_beliefs}')
     add('history 为空时保持空白，不生成历史。当前信念来自角色保存的 beliefs；初始信念不会重复附在背景里。没有所有角色共用的心理规则，也不发送旧版 NEUTRAL。' if zh else 'Keep history blank when unset; do not generate a biography. Current beliefs come from the saved beliefs field. Do not append the initial beliefs again. There are no shared psychological rules and the previous NEUTRAL instructions are not sent.')
     add('## 三 程序选人，无模型开口判断' if zh else '## Three Speaker selection without model decisions')
-    add('主流程不调用 decide，也不发送目录内兼容保留的 decide 提示词。不生成 speak、feeling 或 intent；只有获选角色收到写台词请求。' if zh else 'The main loop does not call decide or send the legacy decide catalog text retained for compatibility. Generate no speak, feeling or intent fields; only the selected character receives a composition request.')
+    add('主流程不调用 decide，也不发送目录内兼容保留的 decide 提示词。选人不生成 speak、feeling 或 intent；只有获选角色收到写台词请求。feeling/intent 由独立后台内心请求生成，不参与选人。' if zh else 'The main loop does not call decide or send the legacy decide catalog text retained for compatibility. Speaker selection generates no speak, feeling or intent fields; only the selected character receives a composition request. A separate background task generates feeling/intent without participating in selection.')
     add('## 四 写台词' if zh else '## Four Compose dialogue')
     add('System：创作说明＋人物背景与当前信念。User：仅现场记录。performance 字段说明和 JSON schema 通过独立接口参数传入。' if zh else 'System: creative brief + character background and current beliefs. User: scene only. Performance field descriptions and JSON schema are passed separately as API parameters.')
     block(d['compose_system'] + '\n\n' + d['persona_template'] + '\n\n' + d['belief_heading'] + '\n{current_beliefs}')

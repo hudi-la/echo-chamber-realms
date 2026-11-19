@@ -1,0 +1,3 @@
+
+# Preserve exact Intel HEX bytes from tested Arduino builds.
+*.hex binary

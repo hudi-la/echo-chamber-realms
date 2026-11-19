@@ -8,7 +8,7 @@ ROOT = Path(__file__).resolve().parent.parent
 PROMPT_FILE = ROOT / 'prompts.txt'
 TEXT_KEYS = ('opening', 'decide', 'compose_system', 'compose', 'ruminate', 'impression', 'no_impression',
              'belief_heading', 'recent_heading', 'experience_heading',
-             'context_heading', 'daily', 'end', 'bedtime', 'persona_template', 'performance')
+             'thought_system', 'private_heading', 'context_heading', 'daily', 'end', 'bedtime', 'persona_template', 'performance')
 
 
 def read_catalogs(path, *, text=None):

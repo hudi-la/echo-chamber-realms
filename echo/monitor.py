@@ -1,7 +1,7 @@
 """作者监控台：浏览器里看流水和三只木偶的记忆，也能打字、打断。观众永远看不到这个页面。
 它只是房间的一个订阅者 + 一个键盘替身，对引擎没有任何额外权力。"""
 
-from .settings import parameter, parameters
+from .settings import parameter, parameters, rule
 import asyncio
 import json
 from pathlib import Path
@@ -20,7 +20,8 @@ def event_to_msg(ev: Event) -> dict | None:
     if isinstance(ev, HumanStarted):
         return {"type": "human_started"}
     if isinstance(ev, PuppetStarted):
-        return {"type": "started", "who": ev.name, "text": ev.text}
+        return {"type": "started", "who": ev.name, "text": ev.text,
+                **({"performance": dict(ev.performance)} if ev.performance else {})}
     if isinstance(ev, PuppetSaid):
         return {"type": "said", "who": ev.name, "text": ev.text}
     if isinstance(ev, PuppetCut):
@@ -49,6 +50,7 @@ class Monitor:
         self._audio_client = None
         self.audio_ready = asyncio.Event()
         self.waiting_for_audio = False
+        self.interaction = None
         self.on_audio_ready = None
         self.on_playback = None
         self.on_audio_disconnect = None
@@ -74,17 +76,15 @@ class Monitor:
             "visitor": self.room.visitor.present,
             "presence_reliable": self.room.presence_reliable,
             "speaker": self.room.speaker,
+            "interaction": self.interaction,
             "quiet_for": int(now - self.room.last_activity),
             "puppets": {
                 p.name: {
                     "usage": (p.brain.token_usage.snapshot() if getattr(getattr(p, 'brain', None), 'token_usage', None) is not None else None),
-                    "inner_state": p.memory.thoughts[-1] if p.memory.thoughts else None,
+                    "private_thoughts": p.memory.private_thoughts[-parameter("thoughts.prompt_keep"):] if rule("memory.private_thoughts_enabled") else [],
                     "beliefs": p.memory.beliefs,
                     "relations": p.memory.relations,
                     "impressions": [i["text"] for i in p.memory.impressions[-5:]],
-                    "unspoken": [u["text"] for u in p.memory.unspoken],
-                    "thoughts": [f"{t['feeling']} → {t['intent']}" + ("" if t.get("said") else "（没开口）")
-                                 for t in p.memory.thoughts[-6:]],
                     "last_spoke_ago": None if p.last_spoke_at is None else int(now - p.last_spoke_at),
                 } for p in self.puppets
             },
@@ -109,6 +109,10 @@ class Monitor:
     async def _pump(self) -> None:
         while True:
             ev = await self._inbox.get()
+            if isinstance(ev, PuppetStarted):
+                self.interaction = {"who": ev.name, "at": ev.at, **dict(ev.performance)}
+            elif isinstance(ev, (PuppetSaid, PuppetCut, HumanStarted)):
+                self.interaction = None
             msg = event_to_msg(ev)
             if msg is not None:
                 self.broadcast(msg)
@@ -179,6 +183,7 @@ class Monitor:
         app = web.Application()
         app.router.add_get("/", self._index)
         app.router.add_get("/ws", self._ws)
+        app.router.add_static("/static/", PAGE.parent / "static", show_index=False)
         app.router.add_get("/favicon.ico", lambda request: web.Response(status=204))
         avatars = PAGE.parent.parent / "avatar"
         if avatars.is_dir():

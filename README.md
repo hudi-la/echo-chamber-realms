@@ -12,6 +12,18 @@
 
 声音按现场位置输出双声道：狗 Charlie 为左 100%／右 0%，鸟 Kaka 为左 0%／右 100%，老鼠 Lucy 为左右各 50%。中英文版共用此布局，比例在 `parameters.toml` 的 `mouth.pan` 中设置。更新后刷新声音页面；电脑输出需选择连接两个音响的立体声设备，并关闭系统的单声道音频。
 
+## 展厅文字形体与独立内心
+
+正式展厅地址：http://127.0.0.1:8765/?display=1#exhibition 。此页面直接订阅主程序的实时 WebSocket：角色自己的感受与意图生成文字群，真实台词先以角色颜色显示在底部，结束后由句首牵引汇入粒子群。保留三维鸟群、物理拖尾、分色海浪、星空与自动视觉降级。
+
+`display=1` 是独立显示模式，不自动开启声音或麦克风，也不会抢占已运行的声音页面。原来的 http://127.0.0.1:8765/ 继续用于声音、麦克风和调试；如果要同一页面负责声音和展厅，用不带 `display=1` 的 `/#exhibition`。按 F 或点“开全屏”进入全屏，D 切换调试视图。8878 仅为示例预览，正式展厅使用 8765。
+
+每个角色独立后台生成简短内心，不参与选人，台词和播放不等待结果。内心按角色保存为 `private_thoughts`，只有自己的最近记录进入自己的 situation；网页可读取它们用于视觉，公共对话记录不包含内心。开关是 `rules.toml` 的 `memory.private_thoughts_enabled`；保留数量、提示词数量、字符上限及请求超时在 `parameters.toml` 的 `system.thoughts` / `system.model`。长期信念反刍仍关闭。新增后台请求会增加模型用量，真实延迟需现场验证。
+
+视觉预览：双击 `scripts/preview-exhibition.command`，保持窗口打开，访问 http://127.0.0.1:8878/#exhibition 。使用 HTTP 地址，避免应用内本地文件链接无法加载。预览使用明确标注的示例文字，不连接主程序，不调用模型，不播放声音。预览提供 30 / 60 / 120 / 180 条全英文样例彩带、帧率显示，以及 Flock behavior / glow 中的 Spacing、Gathering、Wandering 调节。可点击三组对话和 Interrupt，也可自动演示。拖动粒子区域旋转三维视角，滚轮缩放，双击复位。
+
+每句话是一条完整的文字带，保留角色感受或意图里的空格、标点和词序，不再拆成单字母。三种颜色保留文字来源。背景为黑色，感受文字的中英文情绪关键词映射为不同颜色与节奏的光晕；该视觉映射不增加模型请求。光晕预先绘入句子纹理，高句数时降低绘图分段数，物理链条精度保持不变。每句话的句首使用真实三维鸟群规则飞行；同角色句首有更强的聚合与对齐，同时保留避让距离和独立游走，形成三个可相互穿插、分散再聚合的群体。后部是固定长度的 Verlet 物理链条，受惯性、重力、空气阻力和弱弯曲刚度影响，由句首牵引回摆与缠绕；没有独立的三个实体、连接管或颜色注入。公开的 target / tone 改变共同流场的扰动位置与强度，打断后扰动缓慢消退，已有文字仍持续交融。视觉上的交融不会让 agent 读取别人的私下感受。主程序传入真实台词参数，预览按钮仅用于演示。
+
 # Echo Chamber Realms
 
 **An interactive art installation by [Hu Di](https://hudiworks.com/), first exhibited in April 2024.**
@@ -43,3 +55,5 @@ This repository contains the installation’s conversational system and its ongo
 - [Original 2024 implementation](https://github.com/hudi-la/echo-chamber-realms/tree/main/legacy)
 
 For the full artistic context and exhibition documentation, visit the [project page](https://hudiworks.com/works/echo-chamber-realms/).
+
+当前眼部行程：见 [2026-11-18 行程总表](docs/hardware/current-ranges.zh.md)。直向收小5%，四个斜向收小15%；需编译并上传配套固件后才在板上生效。

@@ -1,5 +1,5 @@
 """房间里会发生的事。全部不可变；at 是 Clock.now() 的秒数。"""
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 
 @dataclass(frozen=True)
@@ -21,6 +21,7 @@ class HumanSaid(Event):
 class PuppetStarted(Event):
     name: str
     text: str = ""  # 它打算说的整句。只给监控台看；木偶们要等说完（PuppetSaid）才"听到"
+    performance: dict = field(default_factory=dict)  # Public delivery metadata, not private thoughts.
 
 
 @dataclass(frozen=True)

@@ -1,12 +1,13 @@
 # Echo Chamber Realms 提示词总表
 #
-# 脑子目前有 2 种模型生成，不是每句话都生成两次：
+# 台词与私下状态独立请求，台词不等待内心完成；长期反刍仍由规则开关控制。
 #
 # 1. 写台词 compose：程序选中一个角色后，调用 1 次。
 #    system prompt：persona_template（填入该角色的 identity、history、strategy、environment）
 #                   + belief_heading + 该角色运行记忆中的当前信念。
 #    仅 compose 调用：在以上 system 最前面加 compose_system（小说创作说明）。
-#    user message：recent_heading + 最近现场记录。compose 分区留空，不追加发言通知。
+#    user message：recent_heading + 最近现场记录 + 仅该角色自己的最近私下状态。
+#    compose 分区留空，不追加发言通知。
 #    performance：仅作为独立 JSON schema 中的字段说明，不加入 system 或 user。
 #    同一次生成返回 text，以及 performance 里的 target（对谁说）、tone（语气）；不生成 body。
 #    身体动作由程序控制：音频播放时持续动作，句间暂停、打断或结束时停止；不额外调用模型。
@@ -314,3 +315,15 @@ target identifies the person directly addressed by the spoken line; tone is the 
 - 我刚下班，累死了。
 - 你知道上班是什么吗？
 - 你没出去过，怎么知道这些？
+
+[zh.thought_system]
+你正在扮演人物的私下状态更新任务，不是在写对外台词。根据人物资料、刚刚发生的公开对话，以及仅属于你自己的私下状态，写一小段此刻的感受 feeling 和接下来想做什么 intent。每项一两句，具体、平实，可以矛盾或不确定；不要写分析步骤、推理过程或长篇独白。没有新的感受或意图时对应字段留空，不强行变化。不决定谁开口，不生成台词，不修改核心信念。别人的内心对你不可见，不把猜测写成已知事实。此前的私下状态是你的主观感受，不是客观证据，也不要求把它直接说出来。只根据已完成的公开对话和当前说话状态更新，不臆造尚未听到的话。输出所要求的 JSON。
+
+[en.thought_system]
+Update this character's private state, not their spoken dialogue. Using the character background, completed public dialogue and only your own private history, give a brief current feeling and intent (what you would like to do next). Use one or two concrete, plain sentences per field; uncertainty and contradiction are allowed. Do not provide analysis steps, reasoning traces or a long monologue. Leave a field empty if there is nothing new; do not force a change. Do not select a speaker, write dialogue or change core beliefs. Other characters' private states are unavailable; do not treat guesses as facts. Your earlier private states are subjective feelings, not objective evidence or instructions to say them aloud. Use completed public dialogue and current speaking status; do not invent unheard words. Return the requested JSON.
+
+[zh.private_heading]
+仅属于你自己的近期私下状态（其他角色看不到；是你的主观感受，不是对他人的事实判断，也不必直接说出来）：
+
+[en.private_heading]
+Your own recent private states (unavailable to the other characters; subjective feelings, not facts about others or lines you must say aloud):

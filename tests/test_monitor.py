@@ -38,6 +38,9 @@ async def test_monitor_broadcasts_events_logs_and_snapshot(clock, tmp_path):
     room = Room(clock, Transcript(), Floor(), lambda: CFG)
     mem = PuppetMemory.load("Kaka", tmp_path)
     mem.beliefs = ["我的羽毛就是我的论据"]
+    # Old saved thoughts must not reappear as live private-state telemetry.
+    mem.thoughts = [{"feeling": "旧感受", "intent": "旧意图", "said": None}]
+    mem.unspoken = [{"text": "旧的未说出口的话"}]
     puppet = Puppet("Kaka", "你是Kaka。", mem, FakeBrain(), room, PrintMouth(clock, out=lambda s: None),
                     PrintMotors(out=lambda s: None), clock, lambda: CFG, ChangeLog(tmp_path / "c.jsonl"))
     monitor = Monitor(room, [puppet])
@@ -58,8 +61,33 @@ async def test_monitor_broadcasts_events_logs_and_snapshot(clock, tmp_path):
     assert status["day"] == 2 and status["visitor"] is True and status["speaker"] is None
     assert status["puppets"]["Kaka"]["beliefs"] == ["我的羽毛就是我的论据"]
     assert status["puppets"]["Kaka"]["last_spoke_ago"] is None
+    assert not {"inner_state", "thoughts", "unspoken"} & status["puppets"]["Kaka"].keys()
+    assert mem.thoughts and mem.unspoken  # Storage compatibility remains intact.
     history = [m["type"] for m in monitor._history]
     assert "status" not in history  # 快照不进历史
     assert "log" in history         # log 是同步写入的，顺序在事件泵之前
     assert [t for t in history if t != "log"] == ["woke", "human_started", "arrived", "said"]
     pump.cancel()
+
+
+def test_started_transports_public_delivery_metadata():
+    perf = {'target': 'Lucy', 'tone': 'curious'}
+    message = event_to_msg(PuppetStarted(1, 'Charlie', 'Lucy?', perf))
+    assert message == {'type': 'started', 'who': 'Charlie', 'text': 'Lucy?', 'performance': perf}
+
+
+async def test_delivery_survives_status_refresh_and_clears_on_interruption(clock, tmp_path):
+    from echo.events import HumanStarted
+    room = Room(clock, Transcript(), Floor(), lambda: CFG)
+    monitor = Monitor(room, [])
+    pump = asyncio.create_task(monitor._pump())
+    try:
+        await room.publish(PuppetStarted(1, 'Charlie', 'Lucy?', {'target':'Lucy','tone':'curious'}))
+        for _ in range(5): await asyncio.sleep(0)
+        assert monitor.snapshot()['interaction'] == {'who':'Charlie','at':1,'target':'Lucy','tone':'curious'}
+        await room.publish(HumanStarted(2))
+        for _ in range(5): await asyncio.sleep(0)
+        assert monitor.snapshot()['interaction'] is None
+    finally:
+        pump.cancel()
+        await asyncio.gather(pump, return_exceptions=True)

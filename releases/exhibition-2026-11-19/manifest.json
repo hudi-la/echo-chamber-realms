@@ -1,0 +1,19 @@
+{
+  "saved_on": "2026-11-19",
+  "tested_on": "2026-11-18",
+  "board": "arduino:avr:uno",
+  "port": "/dev/cu.usbmodem31201",
+  "dog_yaw_enabled": false,
+  "firmware_matches_last_tested_upload": true,
+  "sha256": {
+    "hardware/current-20261021/PuppetEyes/src/PuppetEyes.cpp": "06fcab1dba639d24da8ea1b70ca2a056bd3708a7692baddc694944ccb0914d08",
+    "hardware/current-20261021/PuppetEyes/src/PuppetEyes.h": "da0051bd2b9cdd812e64d736a8f64ce8b4f7fbbd6626ee31a16b6f5675c9cc08",
+    "hardware/current-20261021/ThreePuppets_SerialPerformance/ThreePuppets_SerialPerformance.ino": "7ad98589b2d77c2694839ce1f60bb05058fa358c42794af7c6409929540faec5",
+    "parameters.toml": "aae2abddc6aedf53aeb9e0f2d2499055ced7e3dfdb11a5d081677008f7e38885",
+    "rules.toml": "c88cb30ffcaea95a06b1043b5f28665d28988d6a3aaadb1d0157a6004f080a4c",
+    "prompts.txt": "f3240661157c5378b5ad679331b077496e7f974ac2d832273a63a1e25ad84297",
+    "config.toml": "29f80491f04284410d44562c7504e0c5b440a6dbfeb80d1a5af12954fb419ea7",
+    "config.en.toml": "c505ed8e7c2b8f376d0e41bc906e73ca73f9525ea4429bf219011c53a9bed604",
+    "firmware/ThreePuppets_SerialPerformance.ino.hex": "2ecbf70306a557e2f8fd7f411ce8e5760052590e782db8af44f8ff1fdeb39419"
+  }
+}

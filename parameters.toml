@@ -200,6 +200,9 @@ language = "en"
 
 # 模型请求：超时用秒，tokens 为 API 模式下的输出预算；订阅接口沿用其既有行为，不发送该预算。
 [system.model]
+thought_timeout = 15.0
+openai_thought_tokens = 600
+anthropic_thought_tokens = 400
 compose_timeout = 15.0
 subscription_timeout = 15.0
 subscription_max_reply_chars = 100000
@@ -240,7 +243,7 @@ renew_seconds = 0.4
 
 # 串口与新动作控制器：端口和继电器电平在这里配置，空值保持未连接；不是旧 motors 配置。
 [system.serial]
-port = "/dev/cu.usbmodem31401"
+port = "/dev/cu.usbmodem31201"
 relay_active = "HIGH"
 baud = 115200
 read_chunk_bytes = 512
@@ -283,3 +286,10 @@ mic_queue_seconds = 1.0
 # 提供给模型的现场记录：安静多久才显示累计秒数。
 [system.transcript]
 show_quiet_after_seconds = 5.0
+
+# 内心请求：合并短时间内的新事件，每个角色至多一个请求在途。
+[system.thoughts]
+debounce_seconds = 0.25
+history_keep = 8
+prompt_keep = 3
+max_chars = 240

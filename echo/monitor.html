@@ -127,59 +127,87 @@
   .token-note { color:var(--dim); font-size:11px; line-height:1.6; margin:9px 0 0 }
   #feed { min-height:0 }
 
-  /* Projection prototype: each character exposes its latest actual inner state. */
-  body.exhibition .brand { font-size:0 }
-  body.exhibition .brand span { font-size:13px!important; letter-spacing:.18em }
-  body.exhibition .view-switch,body.exhibition #conn { display:none }
-  body.exhibition #fullscreen { margin-left:auto; font-size:0 }
-  body.exhibition #fullscreen::after { content:"Full screen";font-size:12px }
-  .constellation { inset:3% 5% 33% }
-  .actor { width:29%; padding:12px; }
-  .actor[data-name="Charlie"] { left:17%;top:48% }
-  .actor[data-name="Lucy"] { left:50%;top:42% }
-  .actor[data-name="Kaka"] { left:83%;top:48% }
-  .inner { display:block; margin:22px auto 0; max-width:340px; text-align:left; color:var(--actor); font:clamp(15px,1.4vw,25px)/1.5 var(--serif); letter-spacing:0 }
-  .inner { min-height:5em; opacity:0; transform:translateY(9px); transition:opacity 1.2s,transform 1.2s; pointer-events:none }
-  .inner.visible { opacity:1; transform:translateY(0) }
-  .actor[data-name="Charlie"] { left:20%;top:52%; }
-  .actor[data-name="Lucy"] { left:48%;top:43%; }
-  .actor[data-name="Kaka"] { left:79%;top:61%; }
-  .actor small { display:none }
-  .actor strong { font-size:17px; opacity:.7 }
-  .orb { width:105px;height:62px; border:0; border-radius:0; background:none; box-shadow:none; position:relative; opacity:.65; transform:rotate(-18deg); }
-  .orb::before,.orb::after { content:"";position:absolute;inset:6px 2px;border:1px solid currentColor;border-radius:72% 28% 63% 37% / 44% 68% 32% 56%; transform:rotate(17deg); }
-  .orb::after { inset:1px 13px;transform:rotate(-29deg);opacity:.45;border-width:2px 0 1px 1px; }
-  .actor[data-name="Lucy"] .orb { width:61px;height:97px;transform:rotate(23deg) }
-  .actor[data-name="Kaka"] .orb { width:116px;height:77px;transform:rotate(-39deg) }
-  .actor.active .orb { animation:ink-breathe 3.4s ease-in-out infinite;box-shadow:none;opacity:1 }
-  @keyframes ink-breathe { 50% { filter:drop-shadow(0 0 12px currentColor);opacity:.55 } }
-  .constellation svg { display:none }
-
-  .inner-label { display:block; color:var(--actor); font:10px/1.5 var(--mono); letter-spacing:.12em; margin:12px 0 5px; text-transform:uppercase }
-  .subtitle { left:10%;right:10%;bottom:8% }
-  #stage-text { font-size:clamp(24px,2.4vw,42px); max-height:24vh }
-  #thought-fall { position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:1 }
-  .subtitle { bottom:25%; z-index:2; pointer-events:none }
-  .stage-foot { z-index:2 }
-  #stage-detail { z-index:3 }
-  body.exhibition header .brand, .stage-foot, .stage-label { display:none }
-  .orb,.actor[data-name="Lucy"] .orb,.actor[data-name="Kaka"] .orb { width:110px;height:120px;transform:none;opacity:.85;overflow:hidden;animation:portrait-idle 6s ease-in-out infinite;transform-origin:50% 90%;mix-blend-mode:screen }
-  .orb::before,.orb::after { display:none }
-  .orb img { display:block;width:100%;height:100%;object-fit:cover;filter:url(#portrait-ink); }
-  .actor[data-name="Charlie"] .orb img { object-position:40% 25%;transform:scale(1.15) }
-  .actor[data-name="Lucy"] .orb { animation-delay:-2s }
-  .actor[data-name="Lucy"] .orb img { transform:scale(2);transform-origin:50% 15%;object-position:50% 10% }
-  .actor[data-name="Kaka"] .orb { animation-delay:-4s }
-  .actor[data-name="Kaka"] .orb img { object-fit:contain }
-  .actor.active .orb { animation:portrait-speaking .85s ease-in-out infinite;filter:none;box-shadow:none }
-  @keyframes portrait-idle { 0%,100% {transform:rotate(-2deg) translateY(0)} 50% {transform:rotate(2deg) translateY(-4px)} }
-  @keyframes portrait-speaking { 0%,100% {transform:rotate(-3deg) translateY(0)} 50% {transform:rotate(3deg) translateY(-7px)} }
-  .orb img,.actor[data-name="Charlie"] .orb img,.actor[data-name="Lucy"] .orb img,.actor[data-name="Kaka"] .orb img { object-fit:contain;object-position:center;transform:none;filter:none }
-  .subtitle { bottom:auto;left:50%;right:auto;top:10px;width:clamp(180px,25vw,320px);transform:translateX(-50%);padding:14px 20px;border:1px solid #89959e80;border-radius:24px 27px 22px 8px;background:#111c26ed;text-align:left;z-index:3 }
-  .subtitle::after { content:"";position:absolute;bottom:-9px;left:49%;width:15px;height:15px;background:#111c26;border-right:1px solid #89959e80;border-bottom:1px solid #89959e80;transform:rotate(45deg) }
-  #stage-who { font:10px var(--mono);letter-spacing:.1em;margin-bottom:6px }
-  #stage-text { font:clamp(16px,1.5vw,23px)/1.4 var(--serif);max-height:22vh }
-  .constellation { transform:translateY(40px) }
+  /* Three private text sculptures in one shared conversation space. */
+  body.exhibition { background:#090c11; grid-template-rows:58px 1fr }
+  body.exhibition header { padding:12px 30px;z-index:5;background:#090c11 }
+  body.exhibition .brand { font:11px var(--mono);letter-spacing:.2em;color:#a5a7ad }
+  body.exhibition .brand span { display:none }
+  body.exhibition .view-switch { margin-left:auto }
+  body.exhibition #conn { font-size:10px;opacity:.5 }
+  body.exhibition #stage { background:radial-gradient(ellipse at 23% 42%,#201b191f,transparent 40%),radial-gradient(ellipse at 75% 42%,#211b301f,transparent 40%),#090c11 }
+  #thought-field { position:absolute;inset:0;width:100%;height:100%;pointer-events:none }
+  .constellation { inset:0;transform:none;pointer-events:none }
+  .constellation svg,.orb { display:none }
+  .actor { width:25%;top:76%!important;pointer-events:auto;z-index:2;padding:10px; }
+  .actor[data-name="Charlie"] { left:20.5% }
+  .actor[data-name="Lucy"] { left:50% }
+  .actor[data-name="Kaka"] { left:79.5% }
+  .actor strong { font:11px var(--mono);letter-spacing:.24em;text-transform:uppercase;opacity:.65;transition:opacity 1s }
+  .actor.active strong { opacity:1 }
+  .actor small { display:block;font:9px var(--mono);text-transform:uppercase;letter-spacing:.18em;opacity:.35;margin-top:10px }
+  .thought-excerpt { display:block;max-width:280px;margin:14px auto 0;font:13px/1.6 var(--serif);color:#aba9af;opacity:0;transition:opacity .8s }
+  .actor:hover .thought-excerpt,.actor:focus-visible .thought-excerpt { opacity:.85 }
+  .stage-label { top:4%;left:4%;font:9px var(--mono);letter-spacing:.24em;color:#60616c }
+  .stage-foot { display:none }
+  .subtitle { left:50%;right:auto;top:auto!important;bottom:5%;width:min(840px,80%);transform:translateX(-50%);padding:0;border:0;border-radius:0;background:none;text-align:center;z-index:3;pointer-events:none }
+  .subtitle::after { display:none }
+  #stage-who { font:9px var(--mono);letter-spacing:.23em;color:#777986;margin-bottom:10px;text-transform:uppercase }
+  #stage-text { font:clamp(17px,1.7vw,27px)/1.5 var(--serif);color:#deddd9;max-height:13vh }
+  #stage-detail { z-index:4;background:#101219f5;border:1px solid #34323c;border-radius:0 }
+  #stage-detail .private-state { margin-top:22px;border-top:1px solid #34323c;padding-top:12px }
+  .field-fallback .orb { display:block;width:120px;height:120px;border:0;box-shadow:none;filter:blur(12px);opacity:.7 }
+  .field-fallback .orb img { display:none }
+  @media(max-width:700px) { body.exhibition header { padding:10px 14px }.actor { width:30% }.actor strong { font-size:9px;letter-spacing:.1em }.stage-label { font-size:8px }.thought-excerpt { font-size:11px }.subtitle { width:88% } }
+  body.exhibition,body.exhibition header { background:#f4f1eb;color:#383333 }
+  body.exhibition #stage { background:#f4f1eb }
+  body.exhibition .brand { color:#514b46 }
+  body.exhibition .view-switch button,body.exhibition #fullscreen { color:#655c55;border-color:#c9c0b7;background:transparent }
+  body.exhibition .view-switch button[aria-pressed="true"] { background:#3a3531;color:#f4f1eb }
+  body.exhibition #stage-who,.stage-label { color:#82756a }
+  body.exhibition #stage-text { color:#403932 }
+  body.exhibition .actor { top:80%!important;transform:translateX(-50%) }
+  body.exhibition .actor strong { color:#675747;opacity:.85 }
+  body.exhibition .actor small { color:#7b7067;opacity:.6 }
+  body.exhibition .thought-excerpt { color:#786b60;position:absolute;left:0;right:0;top:48px }
+  #interaction-label { position:absolute;top:4%;left:35%;right:35%;text-align:center;font:11px var(--mono);letter-spacing:.16em;color:#807269;z-index:2;pointer-events:none }
+  body.exhibition .actor[data-name="Charlie"] { left:23% }
+  body.exhibition .actor[data-name="Kaka"] { left:77% }
+  /* Names are a color key for intermingled streams, not three separate containers. */
+  body.exhibition #stage { background:radial-gradient(ellipse at 50% 46%,#fffdf8 0%,#f4f1eb 75%) }
+  body.exhibition .actor strong::before { content:"";display:inline-block;width:5px;height:5px;border-radius:50%;background:currentColor;margin:0 9px 2px 0 }
+  body.exhibition .actor[data-name="Charlie"] strong { color:#c44a23 }
+  body.exhibition .actor[data-name="Lucy"] strong { color:#08717a }
+  body.exhibition .actor[data-name="Kaka"] strong { color:#7c469e }
+  .camera-hint { position:absolute;top:4%;right:4%;font:9px var(--mono);color:#978b80;letter-spacing:.06em;pointer-events:none;z-index:2 }
+  @media(max-width:700px){.camera-hint{top:17%;font-size:8px}}
+  /* Role color stays in the text; mood is expressed by the cached luminous halo. */
+  body.exhibition,body.exhibition header { background:#06080e;color:#e7e6e2 }
+  body.exhibition #stage { background:radial-gradient(ellipse at 50% 47%,#10121d 0%,#06080e 70%) }
+  body.exhibition .brand { color:#b3b5c0 }
+  body.exhibition .view-switch button,body.exhibition #fullscreen { background:transparent;border-color:#333846;color:#b6bac6 }
+  body.exhibition .view-switch button[aria-pressed="true"] { background:#d7d7d9;color:#11131a }
+  body.exhibition #stage-text { color:#e8e5df }
+  body.exhibition #stage-who,.stage-label,#interaction-label,.camera-hint { color:#9296a5 }
+  body.exhibition .actor[data-name="Charlie"] strong { color:#ffbd78 }
+  body.exhibition .actor[data-name="Lucy"] strong { color:#79e9ef }
+  body.exhibition .actor[data-name="Kaka"] strong { color:#d9aaff }
+  body.exhibition .actor small,body.exhibition .thought-excerpt { color:#9b9fad }
+/* Exhibition is the artwork; controls remain available in the debug view. */
+  body.exhibition .stage-label,body.exhibition .camera-hint,
+  body.exhibition #interaction-label,body.exhibition .preview-controls,
+  body.exhibition .load-panel,body.exhibition .flock-tuning { display:none!important }
+  body.exhibition header { display:block!important;position:fixed;top:16px;right:18px;left:auto;width:auto;padding:0;border:0;background:transparent;z-index:20 }
+  body.exhibition header > :not(#fullscreen) { display:none!important }
+  body.exhibition #fullscreen { display:block;padding:8px 12px;font-size:12px;background:#090c14aa;border:1px solid #444958;color:#c7cad3;cursor:pointer }
+  body.exhibition .actor { display:none!important }
+  body.exhibition #stage { top:0!important;height:100dvh!important }
+  body.exhibition .actor { top:auto!important;bottom:17%;pointer-events:none }
+  #inner-thought { display:none }
+  body.exhibition #inner-thought:not([hidden]) { display:block;position:absolute;left:50%;top:46%;transform:translate(-50%,-50%);width:min(600px,82vw);box-sizing:border-box;padding:26px 30px;z-index:12;pointer-events:none;border:1px solid color-mix(in srgb,var(--thought-color) 45%,transparent);border-radius:18px;background:rgba(12,17,27,.72);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);box-shadow:0 12px 70px #0009;animation:thought-appear .6s ease-out }
+  #inner-thought h2 { margin:0 0 16px;font:500 18px/1.4 system-ui;color:var(--thought-color) }
+  #inner-thought p { margin:12px 0 0;color:#f0f2f6;font:400 clamp(18px,2vw,25px)/1.6 Georgia,"Songti SC",serif;white-space:pre-wrap;overflow-wrap:anywhere }
+  #inner-thought p:empty { display:none }
+  @keyframes thought-appear { from { opacity:0;transform:translate(-50%,-46%) } to { opacity:1;transform:translate(-50%,-50%) } }
 </style>
 </head>
 <body>
@@ -187,7 +215,7 @@
 <header>
   <strong class="brand">回音室 <span style="font-size:10px;opacity:.6">ECHO CHAMBER REALMS</span></strong>
   <nav class="view-switch" aria-label="视图"><button id="debug-view" aria-pressed="true">调试</button><button id="exhibition-view" aria-pressed="false">展厅</button></nav>
-  <button id="fullscreen">全屏</button>
+  <button id="fullscreen">开全屏</button>
   <a class="telemetry" href="/voice-preview/index.html" target="_blank" rel="noopener" style="color:var(--dim)">声音试听 · 原版 / 卡通版</a>
   <span class="telemetry">第 <b id="day">–</b> 天</span>
   <span class="telemetry">帐篷 <b id="visitor">–</b></span>
@@ -204,14 +232,17 @@
   <aside id="cards"></aside>
 </main>
 <section id="stage" aria-label="展厅舞台">
- <div class="stage-label">THREE VOICES · ONE ROOM</div>
+ <div class="stage-label">THREE VOICES / A PRIVATE CURRENT</div>
+ <div id="interaction-label" aria-live="polite"></div>
+ <div class="camera-hint">拖动旋转 · 滚轮缩放 · 双击复位</div>
  <div class="constellation"><svg viewBox="0 0 1000 500" preserveAspectRatio="none" aria-hidden="true"><line id="link-Charlie-Lucy" x1="190" y1="290" x2="500" y2="100"/><line id="link-Lucy-Kaka" x1="500" y1="100" x2="810" y2="290"/><line id="link-Charlie-Kaka" x1="190" y1="290" x2="810" y2="290"/></svg>
- <button class="actor" data-name="Charlie"><span class="orb"><img src="/avatars/projection/charlie.svg" alt="Charlie"></span><strong>Charlie</strong><small>In the room</small><span class="inner"></span></button>
- <button class="actor" data-name="Lucy"><span class="orb"><img src="/avatars/projection/lucy.svg" alt="Lucy"></span><strong>Lucy</strong><small>In the room</small><span class="inner"></span></button>
- <button class="actor" data-name="Kaka"><span class="orb"><img src="/avatars/projection/kaka.svg" alt="Kaka"></span><strong>Kaka</strong><small>In the room</small><span class="inner"></span></button></div>
+ <button class="actor" data-name="Charlie"><span class="orb"><img src="/avatars/projection/charlie.svg" alt="Charlie"></span><strong>Charlie</strong><small>In the room</small><span class="thought-excerpt"></span></button>
+ <button class="actor" data-name="Lucy"><span class="orb"><img src="/avatars/projection/lucy.svg" alt="Lucy"></span><strong>Lucy</strong><small>In the room</small><span class="thought-excerpt"></span></button>
+ <button class="actor" data-name="Kaka"><span class="orb"><img src="/avatars/projection/kaka.svg" alt="Kaka"></span><strong>Kaka</strong><small>In the room</small><span class="thought-excerpt"></span></button></div>
+ <section id="inner-thought" hidden aria-live="polite" aria-label="Private thoughts"><h2></h2><p class="feeling"></p><p class="intent"></p></section>
  <div class="subtitle"><div id="stage-who">In the room</div><div id="stage-text">Waiting for a voice</div></div>
  <div id="stage-detail" hidden><button id="close-detail" aria-label="Close character details">×</button><h3 id="detail-name"></h3><div id="detail-content"></div></div>
- <div class="stage-foot"><span id="stage-presence">Connecting to the room</span><span>A glimpse inside each mind</span></div>
+ <div class="stage-foot"><span id="stage-presence">Connecting to the room</span><span>Three voices in conversation</span></div>
 </section>
 <footer>
   <input id="say" placeholder="你是新朋友。打字，回车发送。" autocomplete="off">
@@ -222,6 +253,11 @@
   <select id="mic" title="用哪个麦克风"><option value="">麦克风：系统默认</option></select>
   <span class="hint">回车 = 开口并说完 · 打断 = 只开口</span>
 </footer>
+<script src="/static/text-flock.js"></script>
+<script src="/static/text-sentences.js"></script>
+<script src="/static/ribbon-chain.js"></script>
+<script src="/static/visual-budget.js"></script>
+<script src="/static/thought-field.js"></script>
 <script>
 (function () {
   const feed = document.getElementById("feed"), cards = document.getElementById("cards");
@@ -238,12 +274,27 @@
   $("exhibition-view").onclick = () => setView("exhibition");
   $("fullscreen").onclick = async () => { try { document.fullscreenElement ? await document.exitFullscreen() : await document.documentElement.requestFullscreen(); } catch(e) { $("fullscreen").textContent = "请使用浏览器全屏"; } };
   $("filter").onchange = () => { feed.dataset.filter = $("filter").value; };
+  document.addEventListener("fullscreenchange", () => { $("fullscreen").textContent = document.fullscreenElement ? "退出全屏" : "开全屏"; });
   setView(location.hash === "#exhibition" ? "exhibition" : "debug");
+  document.addEventListener("keydown", e => {
+    if (e.target.closest("input,textarea,select") || e.metaKey || e.ctrlKey || e.altKey) return;
+    if (e.key.toLowerCase() === "d") setView(document.body.classList.contains("exhibition") ? "debug" : "exhibition");
+    if (e.key.toLowerCase() === "f") $("fullscreen").click();
+  });
   function detail() {
     if (!selectedActor || !latestStatus) return;
     const p = latestStatus.puppets[selectedActor] || {};
     $("detail-name").textContent = selectedActor;
     $("detail-content").innerHTML = '<div class="kv"><div class="k">Beliefs</div>' + list(p.beliefs) + '</div><div class="kv"><div class="k">Observations of others</div>' + list(Object.entries(p.relations || {}).map(([n,t]) => n + "：" + t)) + '</div>';
+    const notes = p.private_thoughts || [];
+    if (notes.length) {
+      const note = notes[notes.length - 1], section = document.createElement('div');
+      section.className = 'private-state';
+      const title = document.createElement('div'); title.className = 'k'; title.textContent = 'Private current';
+      section.appendChild(title);
+      for (const text of [note.feeling, note.intent].filter(Boolean)) { const line = document.createElement('p'); line.textContent = text; section.appendChild(line); }
+      $('detail-content').appendChild(section);
+    }
   }
   document.querySelectorAll(".actor").forEach(el => { el.onclick = () => { selectedActor = el.dataset.name; $("stage-detail").hidden = false; detail(); }; });
   $("close-detail").onclick = () => { selectedActor = null; $("stage-detail").hidden = true; };
@@ -274,27 +325,17 @@
     else row(cls, who, text);
   }
 
-  let bubbleWho = null;
-  function positionBubble(who=bubbleWho) {
-    bubbleWho=who;
-    const bubble=document.querySelector('.subtitle'),stage=$('stage').getBoundingClientRect();
-    if(!stage.width)return;
-    const actor=[...document.querySelectorAll('.actor')].find(el=>el.dataset.name===who);
-    const r=actor?.querySelector('.orb').getBoundingClientRect();
-    const x=r ? r.left-stage.left+r.width/2 : stage.width/2;
-    const half=bubble.getBoundingClientRect().width/2;
-    bubble.style.left=Math.max(half+12,Math.min(stage.width-half-12,x))+'px';
-    bubble.style.top=(r ? Math.max(8,r.top-stage.top-bubble.offsetHeight-19) : Math.max(8,stage.height*.6))+'px';
-  }
-  new ResizeObserver(()=>positionBubble()).observe($('stage'));
   function onMessage(m) {
+    window.thoughtField?.event(m);
     if (["started", "said", "cut"].includes(m.type) && m.text) {
       $("stage-who").textContent = m.who + (m.type === "cut" ? " · Interrupted" : "");
       $("stage-text").textContent = m.text;
+      const color=({Charlie:'#ffbd78',Lucy:'#79e9ef',Kaka:'#d9aaff'})[m.who]||'#e8e5df';
+      $("stage-text").style.color=color;$("stage-who").style.color=color;
+      $("stage-text").style.opacity='1';$("stage-who").style.opacity='1';
     }
     if (m.type === "hearing" && m.text) { $("stage-who").textContent = "Visitor · Speaking"; $("stage-text").textContent = m.text + "…"; }
 
-    if (["started","said","cut","hearing"].includes(m.type) && m.text) positionBubble(m.who);
     switch (m.type) {
       case "hearing": {                      // 耳朵正在转写的半句话
         if (m.text) {
@@ -334,161 +375,20 @@
       $("token-" + key).textContent = fmt(reported.length ? reported.reduce((a,b) => a+b, 0) : null);
     }
     $("token-body").innerHTML = usage.map(([n,u]) => `<tr><td>${n}</td><td>${fmt(u?.reports)}</td>${["input","output","cached","reasoning"].map(k => `<td>${fmt(u?.totals?.[k])}</td>`).join("")}</tr>`).join("");
-    const labels = {line:"台词", rumination:"反刍", seed:"初始化", decision:"旧开口判断"};
+    const labels = {private_thought:"内心",line:"台词", rumination:"反刍", seed:"初始化", decision:"旧开口判断"};
     $("token-latest").textContent = usage.map(([n,u]) => {
       const r = u?.recent?.at(-1);
       return n + (r ? ` 最近：${labels[r.task] || r.task} · ${r.model} · ${fmt(r.total)} tokens` : "：尚无用量回报") + (u?.missing ? `（${u.missing} 次未返回用量）` : "");
     }).join(" ｜ ");
   }
 
-  // A sentence is a connected spring mesh. Contacts move local nodes;
-  // settled sentences sleep until another sentence actually hits them.
-  const thoughtCanvas=document.createElement('canvas');thoughtCanvas.id='thought-fall';$('stage').appendChild(thoughtCanvas);
-  const ink=thoughtCanvas.getContext('2d'),fallen=[];
-  let fieldW=0,fieldH=0,lastFrame=0,accumulator=0;
-  function fitThoughtField(){
-    const r=$('stage').getBoundingClientRect();if(!r.width||!r.height)return;
-    if(r.width===fieldW&&r.height===fieldH)return;
-    const oldW=fieldW,oldH=fieldH;fieldW=r.width;fieldH=r.height;
-    const dpr=Math.min(devicePixelRatio||1,2);thoughtCanvas.width=fieldW*dpr;thoughtCanvas.height=fieldH*dpr;ink.setTransform(dpr,0,0,dpr,0,0);
-    for(const b of fallen){for(const p of b.nodes){const x=p.x*(oldW?fieldW/oldW:1),y=p.y+fieldH-oldH;p.x=p.px=x;p.y=p.py=y;}b.sleep=false;b.still=0;}
-  }
-  new ResizeObserver(fitThoughtField).observe($('stage'));
-  function dropInner(target,name,text){
-    if(!document.body.classList.contains('exhibition'))return;fitThoughtField();
-    const rect=target.getBoundingClientRect(),stage=$('stage').getBoundingClientRect(),style=getComputedStyle(target);
-    const size=parseFloat(style.fontSize),lh=parseFloat(style.lineHeight),font=style.fontStyle+' '+style.fontWeight+' '+style.fontSize+' '+style.fontFamily;
-    ink.font=font;const lines=[];let line='';
-    for(const word of text.split(/\s+/)){const next=line?line+' '+word:word;if(line&&ink.measureText(next).width>rect.width){lines.push(line);line=word;}else line=next;}if(line)lines.push(line);
-    const widths=lines.map(t=>ink.measureText(t).width),w=Math.ceil(Math.max(...widths))+4,h=Math.ceil(lines.length*lh)+4;
-    const texture=document.createElement('canvas'),scale=2;texture.width=w*scale;texture.height=h*scale;
-    const ctx=texture.getContext('2d');ctx.scale(scale,scale);ctx.font=font;ctx.fillStyle=style.color;ctx.textBaseline='alphabetic';
-    lines.forEach((t,i)=>ctx.fillText(t,2,2+i*lh+(lh-size)/2+size*.8));
-    const nodes=[],links=[],triangles=[],rows=[],step=14,cols=Math.ceil(w/step),cell=w/cols;
-    // Each line gets a strip with its own width, joined to the next strip.
-    // This preserves the unsupported space after a short final line.
-    let previous=null;
-    for(let lineIndex=0;lineIndex<lines.length;lineIndex++){
-      const count=Math.min(cols,Math.ceil((widths[lineIndex]+4)/cell));
-      const stripRows=3;
-      for(let row=0;row<=stripRows;row++){
-        if(lineIndex&&row===0)continue;
-        const v=2+lineIndex*lh+row*lh/stripRows;
-        const ids=[];
-        for(let col=0;col<=count;col++){
-          const u=Math.min(w,col*cell),x=rect.left-stage.left+u,y=rect.top-stage.top+v;
-          const p={x,y,px:x,py:y,u,v,body:null};ids.push(nodes.length);nodes.push(p);
-        }
-        rows.push(ids);
-        for(let col=1;col<ids.length;col++)link(ids[col-1],ids[col],.8);
-        for(let col=2;col<ids.length;col++)link(ids[col-2],ids[col],.08);
-        if(previous){
-          const common=Math.min(ids.length,previous.length);
-          for(let col=0;col<common;col++)link(previous[col],ids[col],.75);
-          for(let col=1;col<common;col++){
-            link(previous[col-1],ids[col],.5);link(previous[col],ids[col-1],.5);
-            triangles.push([previous[col-1],previous[col],ids[col]],[previous[col-1],ids[col],ids[col-1]]);
-          }
-        }
-        previous=ids;
-      }
-    }
-    function link(i,j,k){const a=nodes[i],b=nodes[j];links.push({i,j,len:Math.hypot(a.u-b.u,a.v-b.v),k});}
-    const b={nodes,links,triangles,texture,w,h,sleep:false,still:0,age:0,touched:false};nodes.forEach(p=>p.body=b);fallen.push(b);
-    if(fallen.length>36)fallen.shift();
-  }
-  function wake(b){if(b.sleep){b.sleep=false;b.still=0;for(const p of b.nodes){p.px=p.x;p.py=p.y;}}}
-  function softStep(dt){
-    const active=fallen.filter(b=>!b.sleep);
-    for(const b of active){b.age+=dt;b.touched=false;for(const p of b.nodes){const vx=(p.x-p.px)*.989,vy=(p.y-p.py)*.989;p.px=p.x;p.py=p.y;p.x+=vx;p.y+=vy+480*dt*dt;}}
-    for(let pass=0;pass<7;pass++){
-      for(const b of fallen){if(b.sleep)continue;for(const e of b.links){const a=b.nodes[e.i],c=b.nodes[e.j],dx=c.x-a.x,dy=c.y-a.y,d=Math.hypot(dx,dy)||1;
-        const amount=(d-e.len)/d*e.k*.5;a.x+=dx*amount;a.y+=dy*amount;c.x-=dx*amount;c.y-=dy*amount;}
-        // Preserve local area so impacts bend the text without folding it flat.
-        for(const t of b.triangles){
-          const [a,c,d]=t.map(i=>b.nodes[i]);
-          const rest=((c.u-a.u)*(d.v-a.v)-(d.u-a.u)*(c.v-a.v))*.5;
-          const area=((c.x-a.x)*(d.y-a.y)-(d.x-a.x)*(c.y-a.y))*.5;
-          const g=[[.5*(c.y-d.y),.5*(d.x-c.x)],[.5*(d.y-a.y),.5*(a.x-d.x)],[.5*(a.y-c.y),.5*(c.x-a.x)]];
-          const norm=g.reduce((sum,v)=>sum+v[0]*v[0]+v[1]*v[1],0)||1;
-          const force=(area-rest)/norm*.45;
-          [a,c,d].forEach((p,i)=>{p.x-=force*g[i][0];p.y-=force*g[i][1];});
-        }
-        for(const p of b.nodes){if(p.y>fieldH-3){p.y=fieldH-3;p.px+=(p.x-p.px)*.5;b.touched=true;}if(p.x<2)p.x=2;if(p.x>fieldW-2)p.x=fieldW-2;}
-      }
-      // Spatially local contacts, with very little tangential friction.
-      const grid=new Map(),spacing=16,radius=10;
-      for(const b of fallen)for(const p of b.nodes){const gx=Math.floor(p.x/spacing),gy=Math.floor(p.y/spacing);
-        for(let yy=gy-1;yy<=gy+1;yy++)for(let xx=gx-1;xx<=gx+1;xx++)for(const q of grid.get(xx+','+yy)||[]){
-          if(q.body===b||(b.sleep&&q.body.sleep))continue;
-          const dx=p.x-q.x,dy=p.y-q.y,d=Math.hypot(dx,dy);if(d>=radius||d<.001)continue;
-          const impact=Math.hypot(p.x-p.px,p.y-p.py)+Math.hypot(q.x-q.px,q.y-q.py);
-          if(b.sleep&&impact>.4)wake(b);if(q.body.sleep&&impact>.4)wake(q.body);
-          const pa=b.sleep?0:1,qa=q.body.sleep?0:1,total=pa+qa;if(!total)continue;
-          const push=(radius-d)*.8/total,nx=dx/d,ny=dy/d;p.x+=nx*push*pa;p.y+=ny*push*pa;q.x-=nx*push*qa;q.y-=ny*push*qa;
-          // Static contact absorbs sideways motion instead of letting whole piles drift.
-          const tx=-ny,ty=nx,relative=(p.x-p.px-q.x+q.px)*tx+(p.y-p.py-q.y+q.py)*ty;
-          const drag=relative*.18;
-          if(pa){p.px+=tx*drag;p.py+=ty*drag;}
-          if(qa){q.px-=tx*drag;q.py-=ty*drag;}
-          b.touched=q.body.touched=true;
-        }
-        const key=gx+','+gy;if(!grid.has(key))grid.set(key,[]);grid.get(key).push(p);
-      }
-    }
-    for(const b of fallen){if(b.sleep)continue;let movement=0;for(const p of b.nodes)movement+=Math.hypot(p.x-p.px,p.y-p.py);movement/=b.nodes.length;
-      if(b.age>1&&b.touched&&movement<.3)b.still+=dt;else b.still=0;
-      if(b.still>.65){b.sleep=true;for(const p of b.nodes){p.px=p.x;p.py=p.y;}}
-    }
-  }
-  function drawTriangle(texture,a,b,c){
-    const det=a.u*(b.v-c.v)+b.u*(c.v-a.v)+c.u*(a.v-b.v);if(Math.abs(det)<.01)return;
-    const coefficient=(x,y,z)=>[(x*(b.v-c.v)+y*(c.v-a.v)+z*(a.v-b.v))/det,(x*(c.u-b.u)+y*(a.u-c.u)+z*(b.u-a.u))/det,(x*(b.u*c.v-c.u*b.v)+y*(c.u*a.v-a.u*c.v)+z*(a.u*b.v-b.u*a.v))/det];
-    const [aa,cc,ee]=coefficient(a.x,b.x,c.x),[bb,dd,ff]=coefficient(a.y,b.y,c.y);
-    ink.save();ink.beginPath();ink.moveTo(a.x,a.y);ink.lineTo(b.x,b.y);ink.lineTo(c.x,c.y);ink.closePath();ink.clip();ink.transform(aa,bb,cc,dd,ee,ff);ink.drawImage(texture,0,0,texture.width/2,texture.height/2);ink.restore();
-  }
-  function animateThoughtField(now){
-    const elapsed=Math.min((now-(lastFrame||now))/1000,.05);lastFrame=now;
-    if(document.body.classList.contains('exhibition')&&fieldW){accumulator+=elapsed;let n=0;while(accumulator>=1/90&&n++<5){softStep(1/90);accumulator-=1/90;}
-      ink.clearRect(0,0,fieldW,fieldH);for(const b of fallen)for(const t of b.triangles)drawTriangle(b.texture,...t.map(i=>b.nodes[i]));
-    }requestAnimationFrame(animateThoughtField);
-  }
-  requestAnimationFrame(animateThoughtField);
-
-  const innerSeen = new Map(), innerQueue = [];
-  let innerBusy = false;
-  function showNextInner() {
-    if (innerBusy || !innerQueue.length) return;
-    innerBusy = true;
-    const {name, text} = innerQueue.shift();
-    const target = document.querySelector('.actor[data-name="' + name + '"] .inner');
-    target.textContent = text;
-    requestAnimationFrame(() => target.classList.add('visible'));
-    setTimeout(() => {
-      dropInner(target,name,text);
-      target.classList.remove('visible');
-      target.textContent = '';
-      setTimeout(() => { innerBusy = false; showNextInner(); }, 1300);
-    }, Math.max(6500, text.split(/\s+/).length * 330));
-  }
-  function queueInner(name, inner) {
-    if (!inner) return;
-    const signature = JSON.stringify(inner);
-    if (innerSeen.get(name) === signature) return;
-    innerSeen.set(name, signature);
-    // Keep only the latest pending state for each character.
-    for (let i=innerQueue.length-1;i>=0;i--) if (innerQueue[i].name === name) innerQueue.splice(i,1);
-    for (const text of [...new Set([inner.feeling, inner.intent].filter(Boolean))]) innerQueue.push({name,text});
-    showNextInner();
-  }
   function renderStatus(s) {
     renderUsage(s);
+    window.thoughtField?.update(s);
     latestStatus = s;
     document.querySelectorAll(".actor").forEach(el => {
       const active = s.speaker === el.dataset.name;
       el.classList.toggle("active", active);
-      const inner = s.puppets[el.dataset.name]?.inner_state;
-      queueInner(el.dataset.name, inner);
 
       el.querySelector("small").textContent = active ? "Speaking" : "Listening";
     });
@@ -525,6 +425,9 @@
     const bytes = Uint8Array.from(atob(b64), c => c.charCodeAt(0));
     const i16 = new Int16Array(bytes.buffer, bytes.byteOffset, bytes.byteLength >> 1);
     // Explicit channel gains: dog [1, 0], bird [0, 1], mouse [0.5, 0.5].
+    let peak = 0;
+    for (let i = 0; i < i16.length; i++) peak = Math.max(peak, Math.abs(i16[i]) / 32768);
+    console.info("[audio] PCM " + JSON.stringify({peak, samples: i16.length, sr, pan, state: audio.ctx.state}));
     const buf = audio.ctx.createBuffer(2, i16.length, sr);
     for (let channel = 0; channel < 2; channel++) {
       const ch = buf.getChannelData(channel);
@@ -537,11 +440,14 @@
     if (!audio.on || audio.ctx.state !== "running") {
       audioAck("play_error", m.id); return;
     }
+    window.thoughtField?.audioPriority(true);
     const src = audio.ctx.createBufferSource();
     src.buffer = pcmToBuffer(m.pcm, m.sr, m.pan);
     src.connect(audio.ctx.destination);
+    window.thoughtField?.connectAudio(audio.ctx, src);
     src.onended = () => {
       audio.sources = audio.sources.filter(s => s !== src);
+      window.thoughtField?.audioPriority(audio.sources.length > 0);
       audioAck(src.cancelled ? "play_error" : "play_ended", m.id);
     };
     audio.sources.push(src);
@@ -554,6 +460,7 @@
   function stopPcm() {
     for (const s of audio.sources) { s.cancelled = true; try { s.stop(); } catch (e) {} }
     audio.sources = [];
+    window.thoughtField?.audioPriority(false);
   }
   function downsample(f32, from, to) {              // 浏览器通常 48k → 24k
     const ratio = from / to, n = Math.floor(f32.length / ratio), out = new Int16Array(n);
@@ -579,6 +486,7 @@
 
   async function soundOn() {
     if (!audio.ctx) audio.ctx = new (window.AudioContext || window.webkitAudioContext)();
+    audio.ctx.onstatechange = event => console.info("[audio] context", event.target.state);
     await audio.ctx.resume();
     audio.on = true;
     if (ws && ws.readyState === 1) ws.send(JSON.stringify({type: "audio_ready"}));
@@ -651,9 +559,10 @@
     soundOn().catch(() => { $("sound").textContent = "声音：点击开启"; });
     if (audio.ctx && audio.ctx.state !== "running") $("sound").textContent = "声音：点击开启";
   }
-  defaultSound();
+  const displayOnly = new URLSearchParams(location.search).get("display") === "1";
+  if (!displayOnly) defaultSound();
   function unlockSound(e) {
-    if (e.target.closest("#sound, #audio, #mic")) return;
+    if (displayOnly || e.target.closest("#sound, #audio, #mic")) return;
     if (audio.ctx && audio.ctx.state === "suspended") soundOn().catch(() => {});
   }
   document.addEventListener("pointerdown", unlockSound, {once: true});

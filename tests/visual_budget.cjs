@@ -1,0 +1,16 @@
+const assert=require('node:assert/strict');
+const Budget=require('../echo/static/visual-budget.js');
+const b=new Budget();
+assert.equal(b.profile(true).fps,30,'speech proactively caps visual refresh');
+const original=b.profile();
+b.observe({fps:40,costMs:18,seconds:1.5,now:1500});assert.equal(b.level,1,'one slow sample does not flap');
+b.observe({fps:40,costMs:18,seconds:1.5,now:3000});assert.equal(b.level,2);
+assert.ok(b.profile().waveSamples<original.waveSamples);assert.ok(b.profile().dpr<original.dpr);
+for(let i=0;i<30;i++)b.observe({fps:30,costMs:2,audio:true,now:4500+i*1500});
+assert.equal(b.level,2,'never raises quality while speech is active');
+for(let i=0;i<20;i++)b.observe({fps:45,costMs:2,now:60000+i*1500});
+assert.equal(b.level,1,'30 seconds of idle headroom restores one level');
+b.observe({fps:5,costMs:100,stalled:true,now:95000});assert.equal(b.level,2,'large stalls downgrade promptly');
+for(let i=0;i<10;i++)b.observe({fps:5,costMs:100,stalled:true,now:98000+i*3000});
+assert.equal(b.level,4);assert.equal(b.profile().waveSamples,0);assert.equal(b.profile().fps,20);
+console.log('Visual budget: sustained downgrade, speech cap, conservative recovery and minimum tier passed.');

@@ -10,6 +10,7 @@ const sent = [];
 const source = {connect() {return this;}, start() {this.started = true;}, stop() {this.onended();}};
 const node = {connect() {return this;}, pan: {}, gain: {}};
 const context = {
+  window: {},
   audio: {on: true, sources: [], ctx: {state: 'running',
     createBufferSource: () => source, createStereoPanner: () => node,
     createGain: () => node, destination: {}}},
@@ -51,7 +52,7 @@ assert.deepEqual(sent.at(-1), {type: "play_error", id: 9});
 // Clearing a provisional transcript must remove its row, even when nonempty.
 const draft = {isConnected: true, removed: false, remove() {this.removed = true;},
   querySelector() {return {textContent: '并没有说出的临时识别…'};}};
-const transcriptContext = {live: {'新朋友': draft}};
+const transcriptContext = {window: {}, live: {'新朋友': draft}};
 vm.createContext(transcriptContext);
 vm.runInContext(script.slice(script.indexOf('  function onMessage'), script.indexOf('  function list(')), transcriptContext);
 transcriptContext.onMessage({type: 'hearing', text: ''});

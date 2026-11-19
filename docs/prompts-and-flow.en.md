@@ -21,12 +21,23 @@ Do not request a model speak decision. Register available characters in the same
 | Use | Character background | Task input | Output |
 | --- | --- | --- | --- |
 | Select speaker in code | No model request | Event, opening address and last speaker | Selected character |
-| Compose dialogue | Identity + history + strategies + environment + current beliefs | The situation snapshot at selection + composition task | text |
+| Compose dialogue | Identity + history + strategies + environment + current beliefs | The situation snapshot at selection + only own recent private states + composition task | text + performance (target, tone) |
+| Background private state | Same background | Completed public dialogue + current speaker + only own recent private states | feeling + intent |
 | Reflect | Same background | Unprocessed actual dialogue since the last successful reflection + review context + reflection task | Belief changes |
 | Initialize | Reviewed initial beliefs in the language catalog | Install presets for blank beliefs only; no model request | Saved initial beliefs |
 | Synthesize speech | Character voice instructions | Generated dialogue; voice, pitch and channel settings come from configuration | Audio |
 
 The short-term window N is room.window, currently 24. Events include the speaker and spoken content; interruptions include only the estimated spoken prefix and an interruption marker. The window includes puppet dialogue as well as human speech.
+
+Independent private-state task: at most one request per character, triggered by completed dialogue or speaking-start events; nearby events are coalesced. Selection, composition and playback never await it. Failure or timeout does not block dialogue; in-flight tasks are cancelled at shutdown. Only completed public lines are included, never another character’s unheard full line. Persist private_thoughts per character (8 entries); situation includes only that character’s latest 3, with each feeling/intent capped at 240 characters. New results affect future request snapshots only. The switch is memory.private_thoughts_enabled in rules.toml; limits and timeout are in system.thoughts / system.model in parameters.toml. Long-term reflection remains disabled; legacy thoughts/unspoken are not re-enabled.
+
+```text
+Update this character's private state, not their spoken dialogue. Using the character background, completed public dialogue and only your own private history, give a brief current feeling and intent (what you would like to do next). Use one or two concrete, plain sentences per field; uncertainty and contradiction are allowed. Do not provide analysis steps, reasoning traces or a long monologue. Leave a field empty if there is nothing new; do not force a change. Do not select a speaker, write dialogue or change core beliefs. Other characters' private states are unavailable; do not treat guesses as facts. Your earlier private states are subjective feelings, not objective evidence or instructions to say them aloud. Use completed public dialogue and current speaking status; do not invent unheard words. Return the requested JSON.
+```
+
+```text
+Your own recent private states (unavailable to the other characters; subjective feelings, not facts about others or lines you must say aloud):
+```
 
 ### Previous design for migration reference only
 
@@ -157,7 +168,7 @@ Keep history blank when unset; do not generate a biography. Current beliefs come
 
 ## Three Speaker selection without model decisions
 
-The main loop does not call decide or send the legacy decide catalog text retained for compatibility. Generate no speak, feeling or intent fields; only the selected character receives a composition request.
+The main loop does not call decide or send the legacy decide catalog text retained for compatibility. Speaker selection generates no speak, feeling or intent fields; only the selected character receives a composition request. A separate background task generates feeling/intent without participating in selection.
 
 ## Four Compose dialogue
 

@@ -1,29 +1,32 @@
 #include "PuppetEyes.h"
 
+// Exhibition workaround: keep the failed dog yaw servo completely unattached.
+#ifndef ECR_DOG_YAW_ENABLED
+#define ECR_DOG_YAW_ENABLED 0
+#endif
+
 namespace {
 // 按实际接线排序，不使用D0/D1；D12/D13直流电机保持关闭。
 const uint8_t PINS[11] = {A0, A1, 2, 3, 4, 5, 6, 7, 8, 9, 10};
 const uint8_t NONE = 255;
+const bool YAW_ENABLED[3] = {true, true, ECR_DOG_YAW_ENABLED != 0};
 struct Calibration {
   uint8_t yaw, pitch, lidL, lidR;
   int left, right, up, down;
+  int diagonalLeft, diagonalRight, diagonalUp, diagonalDown;
   int openL, closedL, restL, openR, closedR, restR;
 };
 // 角色顺序：鸟、老鼠、狗。左右已按2026-10-20现场确认，以木偶本人为准。
 // 改接线或行程时只修改这里。老鼠D10抬头轴保持1500，不作为眼球上下轴。
+// 2026-11-18: straight offsets 95%, diagonal offsets 85% of prior calibration.
+// Eyelid endpoints move 5% toward rest. See docs/hardware/current-ranges.zh.md.
 const Calibration CAL[3] = {
-  // 2026-11-11：上眼皮全开有异响，两侧全开位置各向闭合方向收回50μs，待现场复核。
-  // 2026-11-11：自身左看有异响，左端点从2050收回至2000，待现场复核。
-  // 2026-11-11后续：仍反馈眼皮异响，全开位置再各收回50μs至825/2250，待现场复核。
-  // 2026-11-11：左看、下看异响，分别再收回50μs至1950/1155，待现场复核。
-  {3, 2, 0, 1, 1950, 1050, 2150, 1155, 825, 2050, 1425, 2250, 950, 1600},
-  {8, NONE, 9, NONE, 1300, 1650, 1500, 1500, 1450, 2000, 1450, 0, 0, 0},
-  // 2026-11-11：自身右看有异响，右端点从900收回至950，待现场复核。
-  // 2026-11-11：上看有异响，来源未确认；先将眼球上端点1900收回至1850，待现场复核。
-  // 2026-11-11：用户怀疑狗眼皮全开有异响，两侧各向闭合方向收回50μs，待现场复核。
-  // 2026-11-11：自身左看有轻微异响，左端点2000收回至1950，待现场复核。
-  // 2026-11-11：右看仍有轻微异响，右端点950再收回至1000，待现场复核。
-  {7, 6, 4, 5, 1950, 1000, 1850, 1100, 900, 2200, 1500, 2150, 850, 1500}
+  // 鸟
+  {3, 2, 0, 1, 1930, 1070, 2120, 1170, 1880, 1120, 2050, 1205, 855, 2020, 1425, 2220, 980, 1600},
+  // 老鼠
+  {8, NONE, 9, NONE, 1310, 1640, 1500, 1500, 1330, 1630, 1500, 1500, 1450, 1970, 1450, 0, 0, 0},
+  // 狗
+  {7, 6, 4, 5, 1930, 1025, 1830, 1120, 1880, 1075, 1800, 1160, 930, 2165, 1500, 2090, 880, 1500}
 };
 const unsigned long LEVEL_MS = 450;
 const unsigned long BLINK_MS = 180;
@@ -50,7 +53,7 @@ void PuppetEyes::restLids(uint8_t p) {
 }
 void PuppetEyes::writeEyes(uint8_t p) {
   const Calibration &c = CAL[p];
-  motors[c.yaw].writeMicroseconds(motion[p].yaw);
+  if (YAW_ENABLED[p]) motors[c.yaw].writeMicroseconds(motion[p].yaw);
   if (c.pitch != NONE) motors[c.pitch].writeMicroseconds(motion[p].pitch);
 }
 
@@ -69,7 +72,7 @@ void PuppetEyes::begin() {
     const Calibration &c = CAL[p];
     motion[p] = Motion();
     writeEyes(p);
-    motors[c.yaw].attach(PINS[c.yaw]);
+    if (YAW_ENABLED[p]) motors[c.yaw].attach(PINS[c.yaw]);
     if (c.pitch != NONE) motors[c.pitch].attach(PINS[c.pitch]);
   }
   motors[10].writeMicroseconds(1500);
@@ -116,14 +119,16 @@ bool PuppetEyes::look(Puppet puppet, Gaze gaze, Blink blink, Speed speed) {
   Motion &m = motion[p];
   m.toYaw = 1500;
   m.toPitch = 1500;
+  const bool diagonal = gaze == Gaze::UpperLeft || gaze == Gaze::UpperRight ||
+                        gaze == Gaze::LowerLeft || gaze == Gaze::LowerRight;
   if (gaze == Gaze::Left || gaze == Gaze::UpperLeft || gaze == Gaze::LowerLeft)
-    m.toYaw = c.left;
+    m.toYaw = diagonal ? c.diagonalLeft : c.left;
   if (gaze == Gaze::Right || gaze == Gaze::UpperRight || gaze == Gaze::LowerRight)
-    m.toYaw = c.right;
+    m.toYaw = diagonal ? c.diagonalRight : c.right;
   if (gaze == Gaze::Up || gaze == Gaze::UpperLeft || gaze == Gaze::UpperRight)
-    m.toPitch = c.up;
+    m.toPitch = diagonal ? c.diagonalUp : c.up;
   if (gaze == Gaze::Down || gaze == Gaze::LowerLeft || gaze == Gaze::LowerRight)
-    m.toPitch = c.down;
+    m.toPitch = diagonal ? c.diagonalDown : c.down;
   m.speed = speed;
   if (blink == Blink::Yes) {
     if (m.pitch > 1500) {

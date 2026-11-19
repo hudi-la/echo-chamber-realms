@@ -183,7 +183,7 @@ def validate_controls():
     if not isinstance(lease, int) or not 0 < lease <= 1200 or not 0 < renew < lease / 1000:
         raise ValueError('parameters.toml: body lease must be 1..1200ms, with renewal earlier than expiry')
     for path in ('room.tick_seconds', 'speech.playback_poll_seconds', 'serial.heartbeat_seconds',
-                 'model.compose_timeout', 'model.subscription_timeout', 'speech.tts_timeout'):
+                 'model.thought_timeout', 'model.compose_timeout', 'model.subscription_timeout', 'speech.tts_timeout'):
         if _value(data, path) <= 0:
             raise ValueError(f'parameters.toml: system.{path} must be positive')
     policy = rules()
@@ -201,13 +201,15 @@ def validate_controls():
     if not isinstance(audience, str) or not audience or audience in names:
         raise ValueError('rules.toml: audience_target must be distinct from characters')
     for path in ('monitor.history_entries', 'serial.read_chunk_bytes', 'serial.buffer_limit_bytes',
-                 'ears.max_upload_queue_chunks', 'model.subscription_max_reply_chars'):
+                 'ears.max_upload_queue_chunks', 'model.subscription_max_reply_chars',
+                 'thoughts.history_keep', 'thoughts.prompt_keep', 'thoughts.max_chars',
+                 'model.openai_thought_tokens', 'model.anthropic_thought_tokens'):
         value = _value(data, path)
         if type(value) is not int or value <= 0:
             raise ValueError(f'parameters.toml: system.{path} must be a positive integer')
     for section, keys in {
         'conversation': ('prefer_named_character', 'avoid_repeat_speaker', 'ignore_own_speech_event'),
-        'memory': ('reflection_enabled', 'allow_belief_changes', 'require_change_reason', 'save_companion_observations', 'save_visitor_impressions'),
+        'memory': ('private_thoughts_enabled', 'reflection_enabled', 'allow_belief_changes', 'require_change_reason', 'save_companion_observations', 'save_visitor_impressions'),
         'performance': ('body_during_speech', 'move_eyes', 'avert_and_return'),
     }.items():
         for key in keys:

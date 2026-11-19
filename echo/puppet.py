@@ -31,6 +31,8 @@ class Puppet:
         self._deciding: asyncio.Task | None = None
         self._speech_task: asyncio.Task | None = None
         self._audible = False
+        self._thought_task: asyncio.Task | None = None
+        self._thought_pending = False
         self._ruminate_lock = asyncio.Lock()
         self._ruminations: set[asyncio.Task] = set()
         self._inbox = room.subscribe()  # 构造时就订阅，run() 还没轮到跑也不会漏事件
@@ -46,10 +48,49 @@ class Puppet:
 
     def situation(self) -> str:
         now = self.clock.now()
-        return catalog(self.cfg().prompt_language)["recent_heading"] + "\n" + self.room.transcript.render(
+        public = catalog(self.cfg().prompt_language)["recent_heading"] + "\n" + self.room.transcript.render(
             now=now, me=self.name, speaker=self.room.speaker, last_spoke_at=self.last_spoke_at,
             quiet_for=now - self.room.last_activity, window=self.cfg().window,
             show_presence=self.room.presence_reliable, language=self.cfg().prompt_language)
+        if rule("memory.private_thoughts_enabled") and self.memory.private_thoughts:
+            import json
+            # Read only this puppet's store. Public transcript never contains private states.
+            recent = self.memory.private_thoughts[-parameter("thoughts.prompt_keep"):]
+            limit = parameter("thoughts.max_chars")
+            private = [{"at": t.get("at", ""), "context_at": t.get("context_at", ""),
+                        "feeling": str(t.get("feeling", ""))[:limit],
+                        "intent": str(t.get("intent", ""))[:limit]} for t in recent]
+            public += "\n\n" + catalog(self.cfg().prompt_language)["private_heading"] + "\n" + json.dumps(private, ensure_ascii=False)
+        return public
+
+    def request_thought(self) -> None:
+        """Mark fresh public input; at most one background request per character."""
+        if not rule("memory.private_thoughts_enabled") or not callable(getattr(self.brain, "think", None)):
+            return
+        self._thought_pending = True
+        if self._thought_task is None or self._thought_task.done():
+            self._thought_task = asyncio.create_task(self._think_pending())
+
+    async def _think_pending(self) -> None:
+        while self._thought_pending:
+            # Give selection/composition their turn first; merge nearby arrivals.
+            await asyncio.sleep(parameter("thoughts.debounce_seconds"))
+            self._thought_pending = False
+            system, situation = self.system_prompt(), self.situation()
+            context_at = self.clock.wall()
+            self.brain.language = self.cfg().prompt_language
+            try:
+                thought = await asyncio.wait_for(self.brain.think(system, situation),
+                                                 parameter("model.thought_timeout"))
+                if thought is not None:
+                    self.memory.add_private_thought(thought.feeling, thought.intent,
+                                                    self.clock.wall(), context_at)
+            except asyncio.CancelledError:
+                raise
+            except Exception as error:
+                # A failed private request never cancels speech or retries in a tight loop.
+                self.log(f"  ({self.name} 后台内心更新失败：{type(error).__name__})")
+
 
     # --- 循环 ---
 
@@ -67,6 +108,10 @@ class Puppet:
                             "who": "Visitor" if isinstance(item, HumanSaid) and self.cfg().prompt_language == "en" else ("新朋友" if isinstance(item, HumanSaid) else item.name),
                             "text": item.spoken if isinstance(item, PuppetCut) else item.text,
                             "cut": isinstance(item, PuppetCut)})
+                # Listening and speaking both update private state independently of turn selection.
+                # Started supplies only current speaker identity, never their unspoken full text.
+                if any(isinstance(item, (HumanSaid, PuppetSaid, PuppetCut, PuppetStarted)) for item in batch):
+                    self.request_thought()
                 ev = batch[-1]  # 合并反应，不丢记忆计数或离场事件
                 ended = next((e.session_id for e in reversed(batch) if isinstance(e, VisitorLeft)), None)
                 every = self.cfg().ruminate_every
@@ -89,14 +134,10 @@ class Puppet:
                 preferred = isinstance(ev, HumanSaid) and addressed_character(ev.text) == self.name
                 self._deciding = asyncio.create_task(self.consider(preferred=preferred))
         finally:
-            tasks = [t for t in (self._deciding, self._speech_task, *self._ruminations) if t is not None]
+            tasks = [t for t in (self._deciding, self._speech_task, self._thought_task, *self._ruminations) if t is not None]
             for task in tasks:
                 task.cancel()
             await asyncio.gather(*tasks, return_exceptions=True)
-
-    def _inner(self, d) -> str:
-        bits = [b for b in (d.feeling and f"感受：{d.feeling}", d.intent and f"想：{d.intent}") if b]
-        return " · ".join(bits)
 
     async def _stop_speech(self) -> str:
         if self._speech_task is not None and not self._audible:
@@ -154,7 +195,7 @@ class Puppet:
         started = self.clock.now()
         self.last_spoke_at = started
         try:
-            await self.room.publish(PuppetStarted(started, self.name, text))
+            await self.room.publish(PuppetStarted(started, self.name, text, dict(getattr(text, "performance", {}))))
             await self.motors.speaking(self.name)
             spoken, completed = await self.mouth.say(self.name, text)
             if completed:

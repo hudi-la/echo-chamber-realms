@@ -17,7 +17,8 @@ Lucy = ["Lucy", "露西", "小耗子", "耗子", "小老鼠", "老鼠", "mouse",
 Kaka = ["Kaka", "卡卡", "鸵鸟", "bird", "ostrich", "goose"]
 
 [memory]
-reflection_enabled = false     # 暂停全部模型反刍，只生成对话
+reflection_enabled = false     # 暂停长期信念反刍；独立内心任务由 private_thoughts_enabled 控制
+private_thoughts_enabled = true # 每个角色独立异步更新自己的简短感受和意图，不参与选人
 allow_belief_changes = false   # 禁止反刍修改核心信念
 require_change_reason = true
 save_companion_observations = false

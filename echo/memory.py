@@ -1,6 +1,8 @@
-"""每只木偶自己的记忆，以及"随时可拔电"的落盘。只记印象，不记原话。
-顺序：文件工具 → 变更日志 / 天数 / 重置 → PuppetMemory（念头、听到的句数、没说出口的、出厂、带理由的改动）。"""
-from .settings import rule
+"""Per-character persistent memory: public experiences, beliefs and independent private states.
+
+Legacy thoughts/unspoken are retained for old saved files; new private_thoughts are stored separately.
+"""
+from .settings import parameter, rule
 import json
 import os
 import tempfile
@@ -67,7 +69,7 @@ def reset_memories(state_dir: Path, names: list[str], stamp: str) -> list[Path]:
     return moved
 
 
-_FIELDS = ("beliefs", "relations", "impressions", "unspoken", "thoughts", "heard", "updated_at", "pending_experiences", "companion_observations")
+_FIELDS = ("beliefs", "relations", "impressions", "unspoken", "thoughts", "heard", "updated_at", "pending_experiences", "companion_observations", "private_thoughts")
 
 
 @dataclass
@@ -78,11 +80,24 @@ class PuppetMemory:
     relations: dict[str, str] = field(default_factory=dict)
     impressions: list[dict] = field(default_factory=list)
     unspoken: list[dict] = field(default_factory=list)
-    thoughts: list[dict] = field(default_factory=list)   # 每轮的念头：感受 + 想达到什么 + 说了/没说
+    thoughts: list[dict] = field(default_factory=list)   # 旧记忆兼容字段；当前流程不再写入念头
     heard: int = 0                                        # 上次反刍之后听到了几句。存盘，重启接着数
     updated_at: str = ""
     pending_experiences: list[dict] = field(default_factory=list)
     companion_observations: list[dict] = field(default_factory=list)
+
+    # Independent from legacy thoughts: long-term reflection cannot consume this history.
+    private_thoughts: list[dict] = field(default_factory=list)
+
+    def add_private_thought(self, feeling: str, intent: str, wall: str, context_at: str) -> None:
+        limit = parameter("thoughts.max_chars")
+        feeling, intent = feeling.strip()[:limit], intent.strip()[:limit]
+        if not feeling and not intent:
+            return
+        self.private_thoughts.append({"at": wall, "context_at": context_at,
+                                      "feeling": feeling, "intent": intent})
+        self.private_thoughts = self.private_thoughts[-parameter("thoughts.history_keep"):]
+        self.save(wall)
 
     def add_thought(self, feeling: str, intent: str, said: str | None, wall: str, keep: int) -> None:
         """每次决定都记一条，不管开没开口。反刍的原料是这些，不是它表演出来的话。"""
@@ -123,7 +138,7 @@ class PuppetMemory:
         """出厂信念：从人设出发的第一套，整套收下。关系、印象、念头全空 —— 对彼此的看法要从第一句话开始长。"""
         self.beliefs = [b.strip() for b in beliefs if b.strip()][:capacity]
         self.relations, self.impressions, self.unspoken, self.thoughts, self.heard = {}, [], [], [], 0
-        self.pending_experiences, self.companion_observations = [], []
+        self.pending_experiences, self.companion_observations, self.private_thoughts = [], [], []
         self.save(wall)
         changelog.append({"at": wall, "who": self.name, "kind": "seed", "beliefs": list(self.beliefs)})
 

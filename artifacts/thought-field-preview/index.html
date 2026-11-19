@@ -1,0 +1,1276 @@
+<!doctype html>
+<html lang="zh">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>回音室 · Echo Chamber Realms</title>
+<style>
+  :root {
+    --ground: #04060c; --panel: #0a0e17; --edge: #1a2130;
+    --ink: #c9d2e2; --dim: #7b859a; --faint: #4c5568;
+    --charlie: #e0916f; --lucy: #7ab5d6; --kaka: #e8b653; --human: #eef3fb;
+    --mono: "IBM Plex Mono", ui-monospace, Menlo, monospace;
+    --serif: "Songti SC", "Noto Serif CJK SC", serif;
+  }
+  * { box-sizing: border-box }
+  body { margin: 0; background: var(--ground); color: var(--ink); font-family: var(--serif); height: 100vh;
+         display: grid; grid-template-rows: auto 1fr auto; }
+  header { display: flex; gap: 26px; align-items: baseline; padding: 12px 20px; border-bottom: 1px solid var(--edge);
+           font-family: var(--mono); font-size: 11px; letter-spacing: .18em; text-transform: uppercase; color: var(--faint) }
+  header b { color: var(--ink); font-weight: 500; letter-spacing: .04em; text-transform: none; font-size: 12px }
+  header .conn { margin-left: auto }
+  header .conn.on { color: #7fc39a }
+  main { display: grid; grid-template-columns: minmax(0, 1.5fr) minmax(320px, 1fr); min-height: 0 }
+  #feed { overflow-y: auto; padding: 14px 20px; display: flex; flex-direction: column; gap: 6px }
+  .row { display: grid; grid-template-columns: 78px 1fr; gap: 12px; align-items: baseline; font-size: 15px; line-height: 1.55 }
+  .row .who { font-family: var(--mono); font-size: 11px; letter-spacing: .14em; text-transform: uppercase; padding-top: 4px }
+  .row.said .text { color: var(--ink) }
+  .row.cut .text::after { content: "（被打断）"; color: var(--faint); font-size: 13px }
+  .row > .text:only-child { grid-column: 1 / -1; overflow-wrap: anywhere }
+  .row.log { font-size: 13px; color: var(--faint) }
+  .row.log .who { color: var(--faint) }
+  .row.sys { font-family: var(--mono); font-size: 11px; color: var(--faint); letter-spacing: .08em; grid-template-columns: 1fr }
+  .who.Charlie { color: var(--charlie) } .who.Lucy { color: var(--lucy) } .who.Kaka { color: var(--kaka) } .who.human { color: var(--human) }
+  .row.speaking .text { color: var(--dim) }
+  .row.speaking .who::after { content: " ●"; font-size: 8px; animation: pulse 1.6s infinite }
+  aside { border-left: 1px solid var(--edge); overflow-y: auto; padding: 14px 18px; display: flex; flex-direction: column; gap: 18px }
+  .card h3 { margin: 0 0 8px; font-family: var(--mono); font-size: 11px; letter-spacing: .2em; text-transform: uppercase; display: flex; gap: 10px; align-items: baseline }
+  .card h3 small { color: var(--faint); letter-spacing: .06em; text-transform: none; font-weight: 400 }
+  .card h3.speaking::before { content: "●"; font-size: 9px; animation: pulse 1.6s infinite }
+  @keyframes pulse { 0%,100% { opacity: .3 } 50% { opacity: 1 } }
+  .kv { margin: 0 0 8px }
+  .kv .k { font-family: var(--mono); font-size: 10px; letter-spacing: .16em; color: var(--faint); text-transform: uppercase; margin-bottom: 3px }
+  .kv ul { margin: 0; padding-left: 14px; font-size: 13.5px; line-height: 1.55; color: var(--dim) }
+  .kv ul li.new { color: var(--ink) }
+  .kv .empty { font-size: 12px; color: var(--faint) }
+  footer { display: flex; gap: 10px; padding: 12px 20px; border-top: 1px solid var(--edge); align-items: center }
+  footer input { flex: 1; background: var(--panel); border: 1px solid var(--edge); color: var(--ink); font: 15px var(--serif); padding: 10px 12px; outline: none }
+  footer input:focus { border-color: var(--dim) }
+  footer button { background: transparent; border: 1px solid var(--edge); color: var(--ink); font: 11px var(--mono); letter-spacing: .16em; text-transform: uppercase; padding: 10px 16px; cursor: pointer }
+  footer button:hover { border-color: var(--dim) }
+  footer button.cut { color: var(--charlie) }
+  footer select { background: var(--panel); border: 1px solid var(--edge); color: var(--ink); font: 11px var(--mono); padding: 9px 8px; max-width: 220px }
+  footer .hint { font-family: var(--mono); font-size: 10px; color: var(--faint); letter-spacing: .1em }
+
+  body { --ground:#f3f1eb; --panel:#fffefa; --edge:#dcdcd5; --ink:#272e30; --dim:#616d70; --faint:#737e80; --charlie:#af5737; --lucy:#287d9d; --kaka:#927018; background:var(--ground); font-family:system-ui,"PingFang SC",sans-serif }
+  header { padding:18px 28px; letter-spacing:0; font-size:12px; gap:20px; flex-wrap:wrap; align-items:center }
+  header b { font-size:13px; font-weight:600 }
+  .brand { font-size:17px; color:var(--ink); margin-right:12px; letter-spacing:.08em }
+  button, select, input { border-radius:6px }
+  button { cursor:pointer }
+  .view-switch { display:flex; gap:4px }
+  .view-switch button, #fullscreen { padding:8px 12px; background:transparent; border:1px solid var(--edge); color:var(--dim) }
+  .view-switch button[aria-pressed="true"] { background:var(--ink); color:var(--ground); border-color:var(--ink) }
+  main { grid-template-columns:minmax(0,1.35fr) minmax(360px,1fr) }
+  #debug-stream { display:flex; flex-direction:column; min-height:0 }
+  .stream-head { padding:18px 28px 12px; display:flex; justify-content:space-between; gap:14px; align-items:center; border-bottom:1px solid var(--edge); font-size:14px }
+  #filter { padding:7px; border:1px solid var(--edge); background:var(--panel); color:var(--ink) }
+  #feed { padding:20px 28px; gap:14px; flex:1 }
+  .row { grid-template-columns:84px 1fr; font-size:16px; line-height:1.8; padding-bottom:12px; border-bottom:1px solid var(--edge) }
+  .row .who { font-size:12px; letter-spacing:0 }
+  .row.log { font:12px/1.7 var(--mono); color:var(--dim) }
+  .row.sys { font-size:12px; letter-spacing:0 }
+  #feed[data-filter="dialogue"] .row.log,#feed[data-filter="dialogue"] .row.sys { display:none }
+  #feed[data-filter="logs"] .row.said,#feed[data-filter="logs"] .row.cut { display:none }
+  aside { padding:24px; gap:22px; background:var(--panel) }
+  .card { padding:0 0 20px; border-bottom:1px solid var(--edge) }
+  .card h3 { font-size:16px; letter-spacing:.03em; margin-bottom:16px }
+  .card h3 small { font-size:11px }
+  .kv { margin-bottom:14px }
+  .kv .k { font:11px system-ui; letter-spacing:.04em; margin-bottom:7px }
+  .kv ul { font-size:14px; line-height:1.8 }
+  .kv .empty { font-size:13px }
+  footer { padding:14px 28px; background:var(--panel); flex-wrap:wrap }
+  footer input { min-width:180px; font-family:inherit }
+  footer button { font-family:inherit; letter-spacing:0; font-size:12px }
+  footer .hint { width:100%; font-family:inherit; letter-spacing:0 }
+  #stage { display:none }
+  body.exhibition { --ground:#080f17; --ink:#f2eee3; --dim:#a9b8c1; --edge:#31404b; --charlie:#f2a27b; --lucy:#8bd0e7; --kaka:#f4d17c; background:var(--ground) }
+  body.exhibition header { border:0; color:var(--dim); padding:20px 32px }
+  body.exhibition header .telemetry, body.exhibition main, body.exhibition footer { display:none }
+  body.exhibition { grid-template-rows:auto 1fr }
+  body.exhibition #stage { display:block; position:relative; min-height:0; overflow:hidden; background:radial-gradient(ellipse at 50% 52%,#162632 0%,#080f17 66%) }
+  .stage-label { position:absolute; left:4%; top:3%; font:12px var(--mono); letter-spacing:.25em; color:#99acb9 }
+  .constellation { position:absolute; inset:3% 7% 25%; }
+  .constellation svg { position:absolute; inset:0; width:100%; height:100%; overflow:visible }
+  .constellation line { stroke:#7a929f; stroke-width:1; stroke-dasharray:4 9; opacity:0; transition:opacity 1s }
+  .constellation line.observed { opacity:.6 }
+  .actor { position:absolute; width:150px; transform:translate(-50%,-50%); background:none; border:0; color:var(--actor); padding:20px 0; text-align:center }
+  .actor[data-name="Charlie"] { left:19%; top:58%; --actor:var(--charlie) }
+  .actor[data-name="Lucy"] { left:50%; top:20%; --actor:var(--lucy) }
+  .actor[data-name="Kaka"] { left:81%; top:58%; --actor:var(--kaka) }
+  .orb { display:block; width:64px; height:64px; margin:0 auto 22px; border:1px solid currentColor; border-radius:50%; background:radial-gradient(circle at 35% 30%,currentColor,transparent 80%); box-shadow:0 0 48px color-mix(in srgb,var(--actor) 18%,transparent); transition:transform 1s,box-shadow 1s }
+  .actor strong { font:20px var(--serif); letter-spacing:.08em }
+  .actor small { display:block; color:#9babba; margin-top:10px; font-size:12px }
+  .actor.active .orb { animation:breathe 2.6s ease-in-out infinite; box-shadow:0 0 90px color-mix(in srgb,var(--actor) 50%,transparent) }
+  @keyframes breathe { 50% { transform:scale(1.22) } }
+  .subtitle { position:absolute; left:19%; right:19%; bottom:9%; text-align:center }
+  #stage-who { font:14px var(--mono); letter-spacing:.15em; color:var(--dim); margin-bottom:18px }
+  #stage-text { font:clamp(24px,2.8vw,48px)/1.6 var(--serif); text-wrap:pretty; max-height:31vh; overflow-y:auto }
+  .stage-foot { position:absolute; left:4%; right:4%; bottom:3%; color:#9aabb8; display:flex; justify-content:space-between; gap:20px; font-size:12px }
+  #stage-detail { position:absolute; top:4%; right:3%; width:min(330px,40vw); max-height:65%; overflow:auto; background:#12212bef; border:1px solid #415461; padding:24px; border-radius:12px; z-index:2 }
+  #stage-detail[hidden] { display:none }
+  #stage-detail h3 { margin-top:0 }
+  #stage-detail p { font-size:15px; line-height:1.8 }
+  #close-detail { float:right; border:0; background:transparent; color:var(--ink); font-size:20px }
+  @media (max-width:800px) { header { gap:12px; padding:14px } main { grid-template-columns:1fr } aside { display:none } footer { padding:12px } footer .hint { display:none } .actor { width:100px } .orb { width:45px; height:45px } .subtitle { left:7%;right:7% } .brand { font-size:14px } .stage-foot { font-size:10px } }
+  @media (prefers-reduced-motion:reduce) { *,*::before,*::after { animation:none!important; transition:none!important } }
+
+  #usage-panel { padding:12px 28px; border-bottom:1px solid var(--edge); background:var(--panel); font-size:12px; max-height:260px; overflow:auto }
+  #usage-panel summary { cursor:pointer; font-weight:600; padding:5px 0 }
+  .token-stats { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; margin:12px 0 }
+  .token-stats span { display:block; color:var(--dim); font-size:11px }
+  .token-stats b { display:block; margin-top:5px; font:22px var(--mono); color:var(--ink) }
+  #token-roles { width:100%; border-collapse:collapse; font-size:11px; text-align:right }
+  #token-roles th,#token-roles td { padding:6px 5px; border-bottom:1px solid var(--edge) }
+  #token-roles th:first-child,#token-roles td:first-child { text-align:left }
+  .token-note { color:var(--dim); font-size:11px; line-height:1.6; margin:9px 0 0 }
+  #feed { min-height:0 }
+
+  /* Three private text sculptures in one shared conversation space. */
+  body.exhibition { background:#090c11; grid-template-rows:58px 1fr }
+  body.exhibition header { padding:12px 30px;z-index:5;background:#090c11 }
+  body.exhibition .brand { font:11px var(--mono);letter-spacing:.2em;color:#a5a7ad }
+  body.exhibition .brand span { display:none }
+  body.exhibition .view-switch { margin-left:auto }
+  body.exhibition #conn { font-size:10px;opacity:.5 }
+  body.exhibition #stage { background:radial-gradient(ellipse at 23% 42%,#201b191f,transparent 40%),radial-gradient(ellipse at 75% 42%,#211b301f,transparent 40%),#090c11 }
+  #thought-field { position:absolute;inset:0;width:100%;height:100%;pointer-events:none }
+  .constellation { inset:0;transform:none;pointer-events:none }
+  .constellation svg,.orb { display:none }
+  .actor { width:25%;top:76%!important;pointer-events:auto;z-index:2;padding:10px; }
+  .actor[data-name="Charlie"] { left:20.5% }
+  .actor[data-name="Lucy"] { left:50% }
+  .actor[data-name="Kaka"] { left:79.5% }
+  .actor strong { font:11px var(--mono);letter-spacing:.24em;text-transform:uppercase;opacity:.65;transition:opacity 1s }
+  .actor.active strong { opacity:1 }
+  .actor small { display:block;font:9px var(--mono);text-transform:uppercase;letter-spacing:.18em;opacity:.35;margin-top:10px }
+  .thought-excerpt { display:block;max-width:280px;margin:14px auto 0;font:13px/1.6 var(--serif);color:#aba9af;opacity:0;transition:opacity .8s }
+  .actor:hover .thought-excerpt,.actor:focus-visible .thought-excerpt { opacity:.85 }
+  .stage-label { top:4%;left:4%;font:9px var(--mono);letter-spacing:.24em;color:#60616c }
+  .stage-foot { display:none }
+  .subtitle { left:50%;right:auto;top:auto!important;bottom:5%;width:min(840px,80%);transform:translateX(-50%);padding:0;border:0;border-radius:0;background:none;text-align:center;z-index:3;pointer-events:none }
+  .subtitle::after { display:none }
+  #stage-who { font:9px var(--mono);letter-spacing:.23em;color:#777986;margin-bottom:10px;text-transform:uppercase }
+  #stage-text { font:clamp(17px,1.7vw,27px)/1.5 var(--serif);color:#deddd9;max-height:13vh }
+  #stage-detail { z-index:4;background:#101219f5;border:1px solid #34323c;border-radius:0 }
+  #stage-detail .private-state { margin-top:22px;border-top:1px solid #34323c;padding-top:12px }
+  .field-fallback .orb { display:block;width:120px;height:120px;border:0;box-shadow:none;filter:blur(12px);opacity:.7 }
+  .field-fallback .orb img { display:none }
+  @media(max-width:700px) { body.exhibition header { padding:10px 14px }.actor { width:30% }.actor strong { font-size:9px;letter-spacing:.1em }.stage-label { font-size:8px }.thought-excerpt { font-size:11px }.subtitle { width:88% } }
+  body.exhibition,body.exhibition header { background:#f4f1eb;color:#383333 }
+  body.exhibition #stage { background:#f4f1eb }
+  body.exhibition .brand { color:#514b46 }
+  body.exhibition .view-switch button,body.exhibition #fullscreen { color:#655c55;border-color:#c9c0b7;background:transparent }
+  body.exhibition .view-switch button[aria-pressed="true"] { background:#3a3531;color:#f4f1eb }
+  body.exhibition #stage-who,.stage-label { color:#82756a }
+  body.exhibition #stage-text { color:#403932 }
+  body.exhibition .actor { top:80%!important;transform:translateX(-50%) }
+  body.exhibition .actor strong { color:#675747;opacity:.85 }
+  body.exhibition .actor small { color:#7b7067;opacity:.6 }
+  body.exhibition .thought-excerpt { color:#786b60;position:absolute;left:0;right:0;top:48px }
+  #interaction-label { position:absolute;top:4%;left:35%;right:35%;text-align:center;font:11px var(--mono);letter-spacing:.16em;color:#807269;z-index:2;pointer-events:none }
+  body.exhibition .actor[data-name="Charlie"] { left:23% }
+  body.exhibition .actor[data-name="Kaka"] { left:77% }
+  /* Names are a color key for intermingled streams, not three separate containers. */
+  body.exhibition #stage { background:radial-gradient(ellipse at 50% 46%,#fffdf8 0%,#f4f1eb 75%) }
+  body.exhibition .actor strong::before { content:"";display:inline-block;width:5px;height:5px;border-radius:50%;background:currentColor;margin:0 9px 2px 0 }
+  body.exhibition .actor[data-name="Charlie"] strong { color:#c44a23 }
+  body.exhibition .actor[data-name="Lucy"] strong { color:#08717a }
+  body.exhibition .actor[data-name="Kaka"] strong { color:#7c469e }
+  .camera-hint { position:absolute;top:4%;right:4%;font:9px var(--mono);color:#978b80;letter-spacing:.06em;pointer-events:none;z-index:2 }
+  @media(max-width:700px){.camera-hint{top:17%;font-size:8px}}
+  /* Role color stays in the text; mood is expressed by the cached luminous halo. */
+  body.exhibition,body.exhibition header { background:#06080e;color:#e7e6e2 }
+  body.exhibition #stage { background:radial-gradient(ellipse at 50% 47%,#10121d 0%,#06080e 70%) }
+  body.exhibition .brand { color:#b3b5c0 }
+  body.exhibition .view-switch button,body.exhibition #fullscreen { background:transparent;border-color:#333846;color:#b6bac6 }
+  body.exhibition .view-switch button[aria-pressed="true"] { background:#d7d7d9;color:#11131a }
+  body.exhibition #stage-text { color:#e8e5df }
+  body.exhibition #stage-who,.stage-label,#interaction-label,.camera-hint { color:#9296a5 }
+  body.exhibition .actor[data-name="Charlie"] strong { color:#ffbd78 }
+  body.exhibition .actor[data-name="Lucy"] strong { color:#79e9ef }
+  body.exhibition .actor[data-name="Kaka"] strong { color:#d9aaff }
+  body.exhibition .actor small,body.exhibition .thought-excerpt { color:#9b9fad }
+/* Exhibition is the artwork; controls remain available in the debug view. */
+  body.exhibition .stage-label,body.exhibition .camera-hint,
+  body.exhibition #interaction-label,body.exhibition .preview-controls,
+  body.exhibition .load-panel,body.exhibition .flock-tuning { display:none!important }
+  body.exhibition header { display:block!important;position:fixed;top:16px;right:18px;left:auto;width:auto;padding:0;border:0;background:transparent;z-index:20 }
+  body.exhibition header > :not(#fullscreen) { display:none!important }
+  body.exhibition #fullscreen { display:block;padding:8px 12px;font-size:12px;background:#090c14aa;border:1px solid #444958;color:#c7cad3;cursor:pointer }
+  body.exhibition .actor { display:none!important }
+  body.exhibition #stage { top:0!important;height:100dvh!important }
+  body.exhibition .actor { top:auto!important;bottom:17%;pointer-events:none }
+  #inner-thought { display:none }
+  body.exhibition #inner-thought:not([hidden]) { display:block;position:absolute;left:50%;top:46%;transform:translate(-50%,-50%);width:min(600px,82vw);box-sizing:border-box;padding:26px 30px;z-index:12;pointer-events:none;border:1px solid color-mix(in srgb,var(--thought-color) 45%,transparent);border-radius:18px;background:rgba(12,17,27,.72);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);box-shadow:0 12px 70px #0009;animation:thought-appear .6s ease-out }
+  #inner-thought h2 { margin:0 0 16px;font:500 18px/1.4 system-ui;color:var(--thought-color) }
+  #inner-thought p { margin:12px 0 0;color:#f0f2f6;font:400 clamp(18px,2vw,25px)/1.6 Georgia,"Songti SC",serif;white-space:pre-wrap;overflow-wrap:anywhere }
+  #inner-thought p:empty { display:none }
+  @keyframes thought-appear { from { opacity:0;transform:translate(-50%,-46%) } to { opacity:1;transform:translate(-50%,-50%) } }
+
+.load-panel { position:absolute;left:50%;top:14%;transform:translateX(-50%);display:flex;align-items:center;gap:8px;font:10px system-ui;color:#7c7066;z-index:5;white-space:nowrap }
+.load-panel button { border:1px solid #d1c7bd;background:transparent;color:#65574e;border-radius:14px;padding:5px 10px;cursor:pointer }.load-panel button[aria-pressed="true"] { background:#4c4037;color:#fff }.load-meter { margin-left:8px;font-variant-numeric:tabular-nums }
+.preview-controls { position:absolute;left:50%;top:8%;transform:translateX(-50%);display:flex;gap:7px;z-index:5;white-space:nowrap }
+.preview-controls button { background:#f4f1ebc9;border:1px solid #d1c7bd;color:#65574e;padding:8px 12px;font:10px system-ui;cursor:pointer;border-radius:20px }
+.preview-controls button[aria-pressed="true"] { background:#4c4037;color:#fff;border-color:#4c4037 }
+@media(max-width:700px){.preview-controls{max-width:94%;overflow:auto;top:9%}.preview-controls button{padding:7px;font-size:9px}.load-panel{top:20%;gap:4px;font-size:8px}.load-panel button{padding:5px 7px}.load-meter{margin-left:2px}#interaction-label{top:5%}.stage-label{top:1.7%;font-size:7px}}
+
+.preview-controls button,.load-panel button { background:#0c101bcc;color:#b8bed0;border-color:#343b50 }
+.preview-controls button[aria-pressed="true"],.load-panel button[aria-pressed="true"] { background:#c8cddd;color:#10131b;border-color:#c8cddd }
+.load-panel { color:#949caf }
+.flock-tuning { position:absolute;top:19%;left:50%;transform:translateX(-50%);z-index:6;width:310px;background:#0c111cde;border:1px solid #30394a;border-radius:9px;padding:8px 12px;color:#b8c1d0;font:10px system-ui }
+.flock-tuning summary { cursor:pointer;letter-spacing:.05em;text-align:center }
+.flock-tuning label { display:flex;align-items:center;gap:9px;margin-top:9px }.flock-tuning input { width:165px;margin-left:auto;accent-color:#a0befa }.flock-tuning output { width:22px;text-align:right }.flock-tuning p { color:#858fa3;line-height:1.5;margin-bottom:2px }
+@media(max-width:700px){.flock-tuning{top:25%;width:270px}}
+
+.preview-debug-tools { display:flex;flex-wrap:wrap;gap:16px;padding:18px;background:#0c101b;color:#b8bed0 }
+.preview-debug-tools .preview-controls,.preview-debug-tools .load-panel,.preview-debug-tools .flock-tuning { position:static;transform:none;margin:0;max-width:100%;overflow:auto }
+body.exhibition .preview-debug-tools { display:none!important }
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs><filter id="portrait-ink" color-interpolation-filters="sRGB"><feColorMatrix type="matrix" values="0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  -.333 -.333 -.333 0 1"/><feComposite in2="SourceGraphic" operator="in"/></filter></defs></svg>
+<header>
+  <strong class="brand">回音室 <span style="font-size:10px;opacity:.6">ECHO CHAMBER REALMS</span></strong>
+  <nav class="view-switch" aria-label="视图"><button id="debug-view" aria-pressed="true">调试</button><button id="exhibition-view" aria-pressed="false">展厅</button></nav>
+  <button id="fullscreen">开全屏</button>
+  <a class="telemetry" href="/voice-preview/index.html" target="_blank" rel="noopener" style="color:var(--dim)">声音试听 · 原版 / 卡通版</a>
+  <span class="telemetry">第 <b id="day">–</b> 天</span>
+  <span class="telemetry">帐篷 <b id="visitor">–</b></span>
+  <span class="telemetry">在说 <b id="speaker">–</b></span>
+  <span class="telemetry">安静 <b id="quiet">–</b> 秒</span>
+  <span class="conn" id="conn">连接中…</span>
+</header>
+<main>
+  <section id="debug-stream"><div class="stream-head"><strong>现场流水</strong><select id="filter" aria-label="流水筛选"><option value="all">所有事件</option><option value="dialogue">角色与访客对话</option><option value="logs">运行日志</option></select></div><details id="usage-panel"><summary>Token 用量 · 本次运行</summary>
+ <div class="token-stats"><div><span>输入（含缓存）</span><b id="token-input">—</b></div><div><span>输出（含推理）</span><b id="token-output">—</b></div><div><span>合计</span><b id="token-total">—</b></div></div>
+ <table id="token-roles"><thead><tr><th>角色</th><th>已回报</th><th>输入</th><th>输出</th><th>缓存</th><th>推理</th></tr></thead><tbody id="token-body"></tbody></table>
+ <p class="token-note">仅脑子实际返回的用量；缓存包含在输入，推理包含在输出，不另加总。未返回字段为 —。不含耳朵与嘴，不代表订阅余额；进程重启清零，刷新页面不清零。</p><p class="token-note" id="token-latest"></p></details>
+<div id="feed" role="log" aria-label="现场流水"></div></section>
+  <aside id="cards"></aside>
+</main>
+<section id="stage" aria-label="展厅舞台">
+ <div class="stage-label">THREE VOICES / A PRIVATE CURRENT</div>
+ <div id="interaction-label" aria-live="polite"></div>
+ <div class="camera-hint">拖动旋转 · 滚轮缩放 · 双击复位</div>
+ <div class="constellation"><svg viewBox="0 0 1000 500" preserveAspectRatio="none" aria-hidden="true"><line id="link-Charlie-Lucy" x1="190" y1="290" x2="500" y2="100"/><line id="link-Lucy-Kaka" x1="500" y1="100" x2="810" y2="290"/><line id="link-Charlie-Kaka" x1="190" y1="290" x2="810" y2="290"/></svg>
+ <button class="actor" data-name="Charlie"><span class="orb"><img src="/avatars/projection/charlie.svg" alt="Charlie"></span><strong>Charlie</strong><small>In the room</small><span class="thought-excerpt"></span></button>
+ <button class="actor" data-name="Lucy"><span class="orb"><img src="/avatars/projection/lucy.svg" alt="Lucy"></span><strong>Lucy</strong><small>In the room</small><span class="thought-excerpt"></span></button>
+ <button class="actor" data-name="Kaka"><span class="orb"><img src="/avatars/projection/kaka.svg" alt="Kaka"></span><strong>Kaka</strong><small>In the room</small><span class="thought-excerpt"></span></button></div>
+ <section id="inner-thought" hidden aria-live="polite" aria-label="Private thoughts"><h2></h2><p class="feeling"></p><p class="intent"></p></section>
+ <div class="subtitle"><div id="stage-who">In the room</div><div id="stage-text">Waiting for a voice</div></div>
+ <div id="stage-detail" hidden><button id="close-detail" aria-label="Close character details">×</button><h3 id="detail-name"></h3><div id="detail-content"></div></div>
+ <div class="stage-foot"><span id="stage-presence">Connecting to the room</span><span>Three voices in conversation</span></div>
+</section>
+<footer>
+  <input id="say" placeholder="你是新朋友。打字，回车发送。" autocomplete="off">
+  <button id="send">发送</button>
+  <button id="interrupt" class="cut">打断</button>
+  <button id="sound" title="只开启扬声器，无需麦克风权限">声音：关</button>
+  <button id="audio" title="开启麦克风与声音（浏览器自带回声消除）">麦克风：关</button>
+  <select id="mic" title="用哪个麦克风"><option value="">麦克风：系统默认</option></select>
+  <span class="hint">回车 = 开口并说完 · 打断 = 只开口</span>
+</footer>
+<script>/* Three-dimensional local flocking + an analytic curl field. Color/role never partitions neighbors. */
+(function(root){
+  'use strict';
+  class TextFlock3D {
+    constructor(particles,options={}){this.options=options;this.particles=particles;this.cell=options.perception||.16;this.grid=new Map();this.acceleration=new Float32Array(particles.length*3);}
+    key(x,y,z){return ((x+64)*128+y+64)*128+z+64;}
+    step(dt,time,activity,focus){
+      const ps=this.particles,g=this.grid,cell=this.cell,a=this.acceleration,o=this.options;g.clear();
+      const centers=new Map();
+      if(o.sameRoleCohesion)for(const p of ps){let c=centers.get(p.role);if(!c)centers.set(p.role,c={x:0,y:0,z:0,vx:0,vy:0,vz:0,n:0});c.x+=p.x;c.y+=p.y;c.z+=p.z;c.vx+=p.vx;c.vy+=p.vy;c.vz+=p.vz;c.n++;}
+      for(let i=0;i<ps.length;i++){const p=ps[i],key=this.key(Math.floor(p.x/cell),Math.floor(p.y/cell),Math.floor(p.z/cell));let bucket=g.get(key);if(!bucket)g.set(key,bucket=[]);bucket.push(i);}
+      for(let i=0;i<ps.length;i++){
+        const p=ps[i],gx=Math.floor(p.x/cell),gy=Math.floor(p.y/cell),gz=Math.floor(p.z/cell);
+        let sx=0,sy=0,sz=0,ax=0,ay=0,az=0,cx=0,cy=0,cz=0,n=0,weightSum=0;
+        const local=[{x:0,y:0,z:0,vx:0,vy:0,vz:0,n:0},{x:0,y:0,z:0,vx:0,vy:0,vz:0,n:0}];
+        // Bounded local perception, with all three colors in the same neighborhood.
+        search:for(let dz=-1;dz<=1;dz++)for(let dy=-1;dy<=1;dy++)for(let dx=-1;dx<=1;dx++){
+          const bucket=g.get(this.key(gx+dx,gy+dy,gz+dz));if(!bucket)continue;
+          for(const j of bucket){if(j===i)continue;const q=ps[j],x=p.x-q.x,y=p.y-q.y,z=p.z-q.z,d2=x*x+y*y+z*z;if(d2>cell*cell||d2<1e-8)continue;
+            // Role affects attraction and alignment, while separation stays color-blind.
+            const weight=p.role===q.role?(o.sameRoleNeighborWeight??1):(o.crossRoleNeighborWeight??1);
+            ax+=q.vx*weight;ay+=q.vy*weight;az+=q.vz*weight;cx+=q.x*weight;cy+=q.y*weight;cz+=q.z*weight;weightSum+=weight;n++;
+            const group=local[p.role===q.role?0:1];
+            group.x+=q.x-p.x;group.y+=q.y-p.y;group.z+=q.z-p.z;
+            group.vx+=q.vx-p.vx;group.vy+=q.vy-p.vy;group.vz+=q.vz-p.vz;group.n++;
+            const comfort=o.separationDistance||.08;
+            if(d2<comfort*comfort){const d=Math.sqrt(d2),push=(comfort-d)/(comfort*d);sx+=x*push;sy+=y*push;sz+=z*push;}
+            if(n>=16)break search;
+          }
+        }
+        const separation=o.separationWeight||.30;
+        let fx=sx*separation,fy=sy*separation,fz=sz*separation;
+        const independent=o.sameRoleAttraction!==undefined||o.crossRoleAttraction!==undefined;
+        if(independent){
+          for(let groupIndex=0;groupIndex<2;groupIndex++){
+            const group=local[groupIndex];if(!group.n)continue;
+            const attraction=groupIndex===0?(o.sameRoleAttraction??0):(o.crossRoleAttraction??0);
+            const following=groupIndex===0?(o.sameRoleFollowing??0):(o.crossRoleFollowing??0);
+            fx+=(group.x*attraction+group.vx*following)/group.n;
+            fy+=(group.y*attraction+group.vy*following)/group.n;
+            fz+=(group.z*attraction+group.vz*following)/group.n;
+          }
+        }
+        if(!independent&&weightSum){const strength=weightSum/n,alignment=(o.localAlignment??.4)*strength,cohesion=(o.localCohesion??.08)*strength;fx+=(ax/weightSum-p.vx)*alignment+(cx/weightSum-p.x)*cohesion;fy+=(ay/weightSum-p.vy)*alignment+(cy/weightSum-p.y)*cohesion;fz+=(az/weightSum-p.vz)*alignment+(cz/weightSum-p.z)*cohesion;}
+        const t=time*.16,x=p.x,y=p.y,z=p.z;
+        // Curl of A=(sin(1.4y+t)cos(1.6z), sin(1.5z+t)cos(1.7x), sin(1.4x+t)cos(1.8y)).
+        const curlX=-1.8*Math.sin(1.4*x+t)*Math.sin(1.8*y)-1.5*Math.cos(1.5*z+t)*Math.cos(1.7*x);
+        const curlY=-1.6*Math.sin(1.4*y+t)*Math.sin(1.6*z)-1.4*Math.cos(1.4*x+t)*Math.cos(1.8*y);
+        const curlZ=-1.7*Math.sin(1.5*z+t)*Math.sin(1.7*x)-1.4*Math.cos(1.4*y+t)*Math.cos(1.6*z);
+        const influence=(o.flowGain||1)*(.026+activity*.024*Math.exp(-((x-focus)**2+y*y+z*z)*1.4));
+        const flowRelaxation=o.flowRelaxation??1.6;
+        fx+=(curlX*influence+z*.045-p.vx)*flowRelaxation;fy+=(curlY*influence-p.vy)*flowRelaxation;fz+=(curlZ*influence-x*.035-p.vz)*flowRelaxation;
+        // One soft 3D envelope, not separate cages for individual characters.
+        const span=o.flightSpan||1,horizontal=o.horizontalSpan||1;
+        const r=Math.sqrt(x*x/(2.25*span*span*horizontal*horizontal)+y*y/(.49*span*span)+z*z/(.64*span*span)),edge=Math.max(0,r-.85)*(o.boundaryGain??.35);
+        fx-=x*edge/2.25;fy-=y*edge/.49;fz-=z*edge/.64;
+        if(o.sameRoleCohesion){const c=centers.get(p.role);if(c&&c.n>1){const k=o.sameRoleCohesion;fx+=(c.x/c.n-x)*k;fy+=(c.y/c.n-y)*k;fz+=(c.z/c.n-z)*k;const align=o.sameRoleAlignment||0;fx+=(c.vx/c.n-p.vx)*align;fy+=(c.vy/c.n-p.vy)*align;fz+=(c.vz/c.n-p.vz)*align;}}
+        if(o.flight){
+          const phase=p.role*Math.PI*2/3;
+          const wander=o.wander||0,individual=(p.phase||0);
+          const offset=wander*(.65*Math.sin(individual)+.18*Math.sin(time*.37+individual));
+          const orbit=o.flightSpan ? .24 : .50,vertical=o.flightSpan ? .31 : .67;
+          const t0=time*orbit+phase+offset;
+          const tx=.95*span*horizontal*Math.sin(t0),ty=span*(.42*Math.sin(time*vertical+phase*1.3+offset)+wander*.16*Math.sin(time*.81+individual*1.7)),tz=.65*span*Math.cos(t0);
+          const steer=o.guideStrength??.48,matching=o.guideAlignment??.32;
+          fx+=(tx-x)*steer+(.95*span*horizontal*orbit*Math.cos(t0)-p.vx)*matching;
+          fy+=(ty-y)*steer+(.42*span*vertical*Math.cos(time*vertical+phase*1.3+offset)-p.vy)*matching;
+          fz+=(tz-z)*steer+(-.65*span*orbit*Math.sin(t0)-p.vz)*matching;
+        }
+        a[i*3]=fx;a[i*3+1]=fy;a[i*3+2]=fz;
+      }
+      const damping=Math.exp(-dt*.35);
+      for(let i=0;i<ps.length;i++){
+        const p=ps[i];p.vx=(p.vx+a[i*3]*dt)*damping;p.vy=(p.vy+a[i*3+1]*dt)*damping;p.vz=(p.vz+a[i*3+2]*dt)*damping;
+        // Smooth flock pulse plus individual pace variation, without frame-to-frame jitter.
+        const variation=o.speedVariation||0;
+        const arousal=p.arousal||0,burst=Math.pow(.5+.5*Math.sin(time*1.05+(p.phase||0)),4);
+        const emotionPace=1+arousal*(.30+burst*2.8);
+        const pace=emotionPace*(1+variation*(.65*Math.sin(time*.48+p.role*2.094)+.35*Math.sin(time*.73+(p.phase||0))));
+        const speed=Math.hypot(p.vx,p.vy,p.vz),cap=(o.maxSpeed||.20)*pace;
+        const floor=(o.minSpeed||0)*pace;
+        if(floor&&speed<floor&&speed>1e-8){p.vx*=floor/speed;p.vy*=floor/speed;p.vz*=floor/speed;}
+        if(speed>cap){p.vx*=cap/speed;p.vy*=cap/speed;p.vz*=cap/speed;}
+        // Drive actual speed toward a target, rather than merely lifting its ceiling.
+        // Emotional surges accelerate individual heads and then visibly release them.
+        if(o.speedVariation && Number.isFinite(p.arousal)){
+          const current=Math.hypot(p.vx,p.vy,p.vz);
+          const target=((o.minSpeed||.20)+((o.maxSpeed||.55)-(o.minSpeed||.20))*.30)*pace;
+          const next=current+(target-current)*(1-Math.exp(-dt*3.5));
+          if(current>1e-8){const gain=next/current;p.vx*=gain;p.vy*=gain;p.vz*=gain;}
+        }
+        p.x+=p.vx*dt;p.y+=p.vy*dt;p.z+=p.vz*dt;
+      }
+    }
+  }
+  if(typeof module!=='undefined'&&module.exports)module.exports=TextFlock3D;else root.TextFlock3D=TextFlock3D;
+})(typeof window==='undefined'?{}:window);
+</script>
+<script>/* Keep complete sentences, punctuation, spaces and word order. Never turn words into a glyph bag. */
+(function(root){
+  'use strict';
+  function sentences(text){
+    text=String(text||'').trim();if(!text)return [];
+    if(typeof Intl!=='undefined'&&Intl.Segmenter){
+      return Array.from(new Intl.Segmenter(undefined,{granularity:'sentence'}).segment(text),s=>s.segment.trim()).filter(Boolean);
+    }
+    return (text.match(/[^。！？.!?\n]+(?:[。！？.!?]+[”’"']*|$)/gu)||[text]).map(s=>s.trim()).filter(Boolean);
+  }
+  if(typeof module!=='undefined'&&module.exports)module.exports=sentences;else root.TextSentences=sentences;
+})(typeof window==='undefined'?{}:window);
+</script>
+<script>/* A pinned head and a flexible, inextensible 3D Verlet chain with gravity and aerodynamic drag. */
+(function(root){
+  'use strict';
+  class RibbonChain3D {
+    constructor(head,length,segments=32){
+      this.head=head;this.length=length;this.spacing=length/segments;this.nodes=[];
+      const speed=Math.hypot(head.vx,head.vy,head.vz)||1;
+      for(let i=0;i<=segments;i++){
+        const s=i*this.spacing;
+        const x=head.x-head.vx/speed*s,y=head.y-head.vy/speed*s-.03*Math.sin(i*.3),z=head.z-head.vz/speed*s;
+        this.nodes.push({x,y,z,px:x-head.vx/60,py:y-head.vy/60,pz:z-head.vz/60});
+      }
+    }
+    step(dt,time,gravity=.002){
+      const ns=this.nodes,h=this.head,drag=Math.exp(-dt*.38),ds=dt*dt;
+      ns[0].x=h.x;ns[0].y=h.y;ns[0].z=h.z;
+      for(let i=1;i<ns.length;i++){
+        const p=ns[i],vx=(p.x-p.px)*drag,vy=(p.y-p.py)*drag,vz=(p.z-p.pz)*drag;
+        p.px=p.x;p.py=p.y;p.pz=p.z;
+        const exposure=i/(ns.length-1);
+        // Shared three-dimensional airflow; relative drag preserves a trailing wake.
+        const t=time*.38,phase=h.phase||0;
+        const airX=.24*Math.sin(p.y*1.4+t)+.12*Math.cos(p.z*1.7-t);
+        const airY=.22*Math.sin(p.z*1.5+t*.9)+.12*Math.cos(p.x*1.6-t);
+        const airZ=.24*Math.sin(p.x*1.4-t)+.12*Math.cos(p.y*1.8+t);
+        const coupling=.8,flutter=.045*exposure;
+        p.x+=vx+(coupling*(airX+h.vx*.35-vx/dt)+flutter*Math.sin(time*1.3+phase+exposure*4))*ds;
+        p.y+=vy+(-gravity+coupling*(airY+h.vy*.35-vy/dt))*ds;
+        p.z+=vz+(coupling*(airZ+h.vz*.35-vz/dt)+flutter*Math.cos(time*1.1+phase+exposure*4))*ds;
+      }
+      for(let pass=0;pass<14;pass++){
+        ns[0].x=h.x;ns[0].y=h.y;ns[0].z=h.z;
+        for(let i=1;i<ns.length;i++){
+          const a=ns[i-1],b=ns[i],dx=b.x-a.x,dy=b.y-a.y,dz=b.z-a.z,d=Math.hypot(dx,dy,dz)||1e-9;
+          const k=(d-this.spacing)/d;
+          if(i===1){b.x-=dx*k;b.y-=dy*k;b.z-=dz*k;}
+          else{a.x+=dx*k*.5;a.y+=dy*k*.5;a.z+=dz*k*.5;b.x-=dx*k*.5;b.y-=dy*k*.5;b.z-=dz*k*.5;}
+        }
+        // Weak bending stiffness keeps the strip supple without letting adjacent letters fold flat.
+        for(let i=2;i<ns.length;i++){
+          const a=ns[i-2],b=ns[i],dx=b.x-a.x,dy=b.y-a.y,dz=b.z-a.z,d=Math.hypot(dx,dy,dz)||1e-9;
+          const k=(d-this.spacing*1.97)/d*.045;
+          if(i>2){a.x+=dx*k*.5;a.y+=dy*k*.5;a.z+=dz*k*.5;}
+          b.x-=dx*k*.5;b.y-=dy*k*.5;b.z-=dz*k*.5;
+        }
+      }
+      ns[0].x=h.x;ns[0].y=h.y;ns[0].z=h.z;
+    }
+  }
+  if(typeof module!=='undefined'&&module.exports)module.exports=RibbonChain3D;else root.RibbonChain3D=RibbonChain3D;
+})(typeof window==='undefined'?{}:window);
+</script>
+<script>/* Adaptive visual-only budget. Audio transport and model timing never depend on it. */
+(function(root){
+  'use strict';
+  class VisualBudget {
+    constructor(){this.level=1;this.bad=0;this.good=0;this.lastChange=-Infinity;}
+    profile(audio=false){
+      const tiers=[
+        {dpr:1.75,waveSamples:40,waveLanes:7,waveHeads:10,starStride:1,fps:60},
+        {dpr:1.4,waveSamples:28,waveLanes:5,waveHeads:8,starStride:2,fps:60},
+        {dpr:1.1,waveSamples:18,waveLanes:4,waveHeads:6,starStride:3,fps:45},
+        {dpr:.85,waveSamples:10,waveLanes:3,waveHeads:4,starStride:5,fps:30},
+        {dpr:.7,waveSamples:0,waveLanes:0,waveHeads:0,starStride:8,fps:20}
+      ];
+      const p={...tiers[this.level]};if(audio)p.fps=Math.min(30,p.fps);return p;
+    }
+    observe({fps,costMs,audio=false,seconds=1.5,now,stalled=false}){
+      const target=this.profile(audio).fps,budget=audio?8:12;
+      const overloaded=stalled||fps<target*.78||costMs>budget;
+      this.bad=overloaded?this.bad+seconds:0;
+      this.good=!overloaded&&!audio&&fps>=target*.94&&costMs<budget*.65?this.good+seconds:0;
+      if(this.level<4&&(stalled||this.bad>=3)&&now-this.lastChange>=2000){
+        this.level++;this.bad=0;this.good=0;this.lastChange=now;
+      }else if(this.level>0&&this.good>=30&&now-this.lastChange>=30000){
+        this.level--;this.good=0;this.lastChange=now;
+      }
+      return this.level;
+    }
+  }
+  if(typeof module!=='undefined'&&module.exports)module.exports=VisualBudget;else root.VisualBudget=VisualBudget;
+})(typeof window==='undefined'?{}:window);
+</script>
+<script>/* One complete sentence = one moving text ribbon in a shared three-dimensional flock. */
+(() => {
+  'use strict';
+  const names=['Charlie','Lucy','Kaka'],colors=['#ffbd78','#79e9ef','#d9aaff'];
+  // Exhibition display compensation: tighter text bloom, clearer surf and stars.
+  const display={textSize:.85,textGlow:7,textGlowAlpha:'88',starGain:1.55,waveGain:1.30,depthDensity:.30};
+  const stage=document.getElementById('stage'),canvas=document.createElement('canvas');
+  canvas.id='thought-field';canvas.setAttribute('aria-hidden','true');stage.prepend(canvas);
+  const ctx=canvas.getContext('2d',{alpha:true});
+  const reduced=matchMedia('(prefers-reduced-motion: reduce)');
+  const states=names.map(()=>({signature:'',notes:[]}));
+  const spokenItems=[];let pendingSpeech=null;
+  // Keep the latest pending thought per role: frequent updates must not create an ever-growing queue.
+  const thoughtCard=document.getElementById('inner-thought'),thoughtQueue=[];
+  const shownThoughts=new Map();let thoughtTimer=null;
+  function showNextThought(){
+    if(!thoughtCard||!thoughtQueue.length){if(thoughtCard)thoughtCard.hidden=true;thoughtTimer=null;return;}
+    const {name,note}=thoughtQueue.shift();
+    thoughtCard.style.setProperty('--thought-color',colors[names.indexOf(name)]);
+    thoughtCard.querySelector('h2').textContent=name+'’s thoughts';
+    thoughtCard.querySelector('.feeling').textContent=note.feeling||'';
+    thoughtCard.querySelector('.intent').textContent=note.intent||'';
+    thoughtCard.hidden=false;thoughtCard.dataset.role=name;
+    const length=((note.feeling||'')+' '+(note.intent||'')).length;
+    thoughtTimer=setTimeout(()=>{thoughtCard.hidden=true;thoughtTimer=setTimeout(showNextThought,650);},Math.max(9000,Math.min(18000,length*55)));
+  }
+  function queueThought(name,note){
+    if(!note||!(note.feeling||note.intent))return;
+    const signature=JSON.stringify([note.feeling,note.intent]);
+    if(shownThoughts.get(name)===signature)return;
+    shownThoughts.set(name,signature);
+    const existing=thoughtQueue.findIndex(item=>item.name===name);
+    if(existing>=0)thoughtQueue[existing]={name,note};else thoughtQueue.push({name,note});
+    if(thoughtTimer===null)showNextThought();
+  }
+
+  const particles=[],flock=new window.TextFlock3D(particles,{perception:.85,maxSpeed:.55,minSpeed:.26,speedVariation:.24,flight:true,flowGain:2.0,sameRoleCohesion:.02,sameRoleAlignment:.10,sameRoleAttraction:.06,crossRoleAttraction:.004,sameRoleFollowing:.30,crossRoleFollowing:.03,flowRelaxation:.65,boundaryGain:.12,separationDistance:.30,separationWeight:1.2,wander:1.05,guideStrength:.42,guideAlignment:.18,flightSpan:2.4});
+  // One cached soft particle sprite per character; no per-frame shadow blur.
+  const waveSprites=colors.map(color=>{
+    const tile=document.createElement('canvas');tile.width=tile.height=24;
+    const g=tile.getContext('2d'),glow=g.createRadialGradient(12,12,0,12,12,12);
+    glow.addColorStop(0,'#ffffff');glow.addColorStop(.22,color);glow.addColorStop(.42,color+'70');glow.addColorStop(1,color+'00');
+    g.fillStyle=glow;g.fillRect(0,0,24,24);return tile;
+  });
+  const distantWaveSprites=waveSprites.map(sprite=>{
+    const tile=document.createElement('canvas');tile.width=tile.height=24;
+    const g=tile.getContext('2d');g.drawImage(sprite,0,0);g.globalCompositeOperation='source-atop';g.globalAlpha=.72;g.fillStyle='#71839b';g.fillRect(0,0,24,24);return tile;
+  });
+  // Stable world-space stars on deep spherical shells, never a screen-space wallpaper.
+  let skySeed=81973;
+  const skyRandom=()=>{skySeed=(Math.imul(skySeed,1664525)+1013904223)>>>0;return skySeed/4294967296;};
+  const stars=Array.from({length:2400},()=>{
+    const azimuth=skyRandom()*Math.PI*2,v=skyRandom()*2-1,r=18+Math.pow(skyRandom(),.65)*100,ring=Math.sqrt(1-v*v);
+    return {x:Math.cos(azimuth)*ring*r,y:v*r,z:Math.sin(azimuth)*ring*r,radius:r,brightness:.16+Math.pow(skyRandom(),3)*.84,phase:skyRandom()*Math.PI*2,tint:Math.floor(skyRandom()*3)};
+  });
+  const starSprites=['#c6dfff','#eeeaff','#ffe1b8'].map(color=>{
+    const tile=document.createElement('canvas');tile.width=tile.height=24;
+    const g=tile.getContext('2d'),halo=g.createRadialGradient(12,12,0,12,12,12);
+    halo.addColorStop(0,'#ffffff');halo.addColorStop(.10,color);halo.addColorStop(.25,color+'88');halo.addColorStop(1,color+'00');
+    g.fillStyle=halo;g.fillRect(0,0,24,24);return tile;
+  });
+  const camera={yaw:0,pitch:.22,zoom:1,drag:false,x:0,y:0};
+  const turn={speaker:-1,target:-1,tone:.45,strength:0,goal:0,key:null};
+  let analyser=null,bins=null,energy=0,last=0,time=0,accumulator=0,frames=0,measured=performance.now();
+  let width=1,height=1,scale=1,nextId=0;
+  let physicsMs=0,drawMs=0;
+  const visualBudget=new window.VisualBudget();let quality=visualBudget.profile(),voiceActive=false,frameStalled=false,activeFrame=false;
+  function moodLight(feeling,role){
+    const text=String(feeling||'').toLowerCase();
+    if(/afraid|fear|nervous|uncertain|uneasy|anxious|exposed|rejection|不安|害怕|紧张|不确定/.test(text))return {name:'uneasy',color:'#78a9ff',pulse:.10};
+    if(/excited|proud|remarkable|exceptional|兴奋|激动|骄傲/.test(text))return {name:'excited',color:'#ff88d5',pulse:.20};
+    if(/angry|frustrat|competition|disagree|生气|愤怒|委屈/.test(text))return {name:'tense',color:'#ff8e79',pulse:.13};
+    if(/sad|lonely|disappear|悲伤|孤独|失落/.test(text))return {name:'sad',color:'#8e92ef',pulse:.05};
+    if(/hope|care|close|belong|trust|help|希望|温暖|亲近/.test(text))return {name:'hopeful',color:'#ffd58c',pulse:.08};
+    if(/reliev|safer|listen|wait|quiet|calm|松了|安心|平静|放松/.test(text))return {name:'calm',color:'#83edd2',pulse:.045};
+    return {name:'neutral',color:colors[role],pulse:.06};
+  }
+  const glyphCache=new Map();
+  function ribbonTexture(text,color,light){
+    const tile=document.createElement('canvas'),probe=tile.getContext('2d');
+    const font='56px Georgia,"Songti SC","Noto Serif CJK SC",serif';probe.font=font;
+    const measuredWidth=probe.measureText(text).width;
+    const ratio=Math.min(1,3600/(measuredWidth+24));
+    tile.width=Math.ceil((measuredWidth+24)*ratio);tile.height=110;
+    const c=tile.getContext('2d');c.scale(ratio,1);c.font=font;c.fillStyle=color;c.textBaseline='middle';c.shadowColor=light.color+display.textGlowAlpha;c.shadowBlur=display.textGlow;
+    c.fillText(text,12,55);
+    const chars=typeof Intl.Segmenter==='function'?[...new Intl.Segmenter(undefined,{granularity:'grapheme'}).segment(text)].map(s=>s.segment):Array.from(text);
+    let prefix='';
+    const glyphs=chars.map(char=>{
+      const start=probe.measureText(prefix).width;prefix+=char;
+      const end=probe.measureText(prefix).width,key=color+'|'+light.color+'|'+char;
+      let sprite=glyphCache.get(key);
+      if(!sprite){
+        const advance=probe.measureText(char).width;
+        const bitmap=document.createElement('canvas');bitmap.width=Math.ceil(advance+40);bitmap.height=110;
+        const g=bitmap.getContext('2d');g.font=font;g.textBaseline='middle';g.fillStyle=color;g.shadowColor=light.color+display.textGlowAlpha;g.shadowBlur=display.textGlow;g.fillText(char,20,55);
+        const distant=document.createElement('canvas');distant.width=bitmap.width;distant.height=bitmap.height;
+        const fog=distant.getContext('2d');fog.drawImage(bitmap,0,0);fog.globalCompositeOperation='source-atop';fog.globalAlpha=.73;fog.fillStyle='#687991';fog.fillRect(0,0,distant.width,distant.height);
+        sprite={bitmap,distant,advance};glyphCache.set(key,sprite);
+      }
+      return {sprite,u:(start+end)*.5/Math.max(1,measuredWidth),space:/^\s+$/.test(char)};
+    });
+    return {canvas:tile,aspect:(measuredWidth+24)/110,glyphs,measuredWidth};
+  }
+
+  function synchronize(){
+    const desired=[];
+    states.forEach((s,role)=>{
+      const seen=new Set();
+      for(const note of s.notes){for(const part of [note.feeling,note.intent])for(const text of window.TextSentences(part)){
+        if(!seen.has(text)){seen.add(text);desired.push({text,role,light:moodLight(note.feeling||part,role),key:role+'\u0000'+text});}
+      }}
+    });
+    // Bounded history, with each whole sentence appearing once rather than thousands of copies.
+    const limit=Math.max(1,Math.min(60,Number(stage.dataset.sentenceLimit)||10));
+    const streams=names.map((_,role)=>desired.filter(item=>item.role===role).slice(-limit));
+    const keep=[];for(let i=0;i<Math.max(0,...streams.map(s=>s.length));i++)for(const stream of streams)if(stream[i])keep.push(stream[i]);
+    keep.push(...spokenItems);
+    const existing=new Map(particles.map(p=>[p.key,p]));
+    const next=keep.map((item,i)=>{
+      if(existing.has(item.key)){
+        const head=existing.get(item.key);
+        head.arousal=({uneasy:.8,tense:1,excited:.5,calm:0,sad:0,hopeful:.1})[item.light.name]||0;
+        if(head.light.color!==item.light.color){head.light=item.light;head.texture=ribbonTexture(item.text,colors[item.role],item.light);}
+        return head;
+      }
+      const theta=i*2.399963,texture=ribbonTexture(item.text,colors[item.role],item.light);
+      const angle=item.role*Math.PI*2/3+.25;
+      const head={...item,id:nextId++,texture,arousal:({uneasy:.8,tense:1,excited:.5,hopeful:.1})[item.light.name]||0,
+        x:(item.role-1)*.58+.12*Math.sin(theta),y:.23*Math.sin(angle)+.09*Math.cos(theta),z:.35*Math.cos(angle)+.08*Math.sin(theta),
+        vx:-Math.sin(angle)*.30,vy:.08*Math.sin(theta),vz:Math.cos(angle)*.30,phase:theta,emerge:0};
+      const length=Math.max(1.4,Math.min(3.8,texture.canvas.width/650));
+      head.ribbon=new window.RibbonChain3D(head,length,36);
+      return head;
+    });
+    particles.splice(0,particles.length,...next);
+    flock.acceleration=new Float32Array(particles.length*3);
+    canvas.dataset.sentenceCount=String(particles.length);
+    canvas.dataset.text=particles.map(p=>p.text).join('\n');
+    canvas.dataset.moods=JSON.stringify(particles.reduce((out,p)=>(out[p.light.name]=(out[p.light.name]||0)+1,out),{}));
+  }
+  function releaseSpeech(speech){
+    const role=names.indexOf(speech.who),field=document.getElementById('stage-text');
+    if(role<0||!field||field.textContent!==speech.text)return;
+    const key='spoken:'+nextId+':'+time;
+    const light=moodLight(states[role].notes.at(-1)?.feeling,role);
+    spokenItems.push({key,text:speech.text,role,light});if(spokenItems.length>9)spokenItems.shift();
+    synchronize();
+    const head=particles.find(p=>p.key===key);if(!head)return;head.emerge=1;
+    const stageBounds=stage.getBoundingClientRect(),style=getComputedStyle(field),fontSize=parseFloat(style.fontSize)||20;
+    const textNode=field.firstChild,origins=[];let offset=0;
+    const sourceChars=typeof Intl.Segmenter==='function'?[...new Intl.Segmenter(undefined,{granularity:'grapheme'}).segment(speech.text)].map(s=>s.segment):Array.from(speech.text);
+    for(const char of sourceChars){
+      const range=document.createRange();range.setStart(textNode,offset);range.setEnd(textNode,offset+char.length);
+      const r=range.getBoundingClientRect();origins.push({x:r.left-stageBounds.left+r.width*.5,y:r.top-stageBounds.top+r.height*.5});offset+=char.length;
+    }
+    // Invert the current camera on its center-depth plane: the head starts at the subtitle.
+    const yaw=camera.yaw+(reduced.matches?0:time*.014),pitch=camera.pitch+(reduced.matches?0:Math.sin(time*.045)*.065);
+    const first=origins[0],sx=(first.x-width*.5)/scale,sy=(height*.43-first.y)/scale;
+    const zRot=sy*Math.sin(pitch);
+    head.x=sx*Math.cos(yaw)-zRot*Math.sin(yaw);head.y=sy*Math.cos(pitch);head.z=(sx*Math.sin(yaw)+zRot*Math.cos(yaw))/1.6;
+    const peers=particles.filter(p=>p.role===role&&p!==head);
+    const target=peers.reduce((v,p)=>({x:v.x+p.x/peers.length,y:v.y+p.y/peers.length,z:v.z+p.z/peers.length}),{x:0,y:0,z:0});
+    const dx=target.x-head.x,dy=target.y-head.y,dz=target.z-head.z,d=Math.hypot(dx,dy,dz)||1;
+    head.vx=dx/d*.9;head.vy=dy/d*.9;head.vz=dz/d*.9;
+    // Start the physical tail along the subtitle baseline; each letter is handed
+    // from its exact wrapped subtitle position into this moving tail in sequence.
+    const n=head.ribbon.nodes.length;
+    for(let i=0;i<n;i++){
+      const distance=i/(n-1)*head.ribbon.length;
+      const x=head.x+distance*Math.cos(yaw),y=head.y,z=head.z+distance*Math.sin(yaw)/1.6;
+      Object.assign(head.ribbon.nodes[i],{x,y,z,px:x,py:y,pz:z});
+    }
+    head.entry={at:time,origins,fontSize};
+    field.style.opacity='0';document.getElementById('stage-who').style.opacity='0';
+    canvas.dataset.latestSpeech=speech.text;
+  }
+  function start(who,target,tone,key){
+    if(key&&turn.key===key)return;turn.key=key;turn.speaker=names.indexOf(who);turn.target=names.indexOf(target);
+    turn.tone=({neutral:.45,curious:.55,hesitant:.23,emphatic:.9,excited:1})[tone]??.45;turn.goal=turn.speaker>=0?1:0;
+    const label=document.getElementById('interaction-label');if(label)label.textContent=names.includes(target)?who+' · '+target:'';
+  }
+  function advance(dt){
+    accumulator=Math.min(accumulator+dt,(visualBudget.level>=3?1:2)/60);
+    const focus=turn.target>=0?(turn.speaker+turn.target-2)*.36:0;
+    while(accumulator>=1/60){flock.step(1/60,time,turn.strength*turn.tone+energy,focus);for(const head of particles)head.ribbon.step(1/60,time);accumulator-=1/60;}
+  }
+  function render(dt){
+    const rect=stage.getBoundingClientRect(),dpr=Math.min(devicePixelRatio||1,quality.dpr);
+    width=Math.max(1,rect.width);height=Math.max(1,rect.height);
+    flock.options.horizontalSpan=Math.max(1.0,Math.min(2.1,width/height*1.12));
+    const w=Math.round(width*dpr),h=Math.round(height*dpr);
+    if(canvas.width!==w||canvas.height!==h){canvas.width=w;canvas.height=h;}
+    ctx.setTransform(dpr,0,0,dpr,0,0);ctx.clearRect(0,0,width,height);
+    const yaw=camera.yaw+(reduced.matches?0:time*.014),pitch=camera.pitch+(reduced.matches?0:Math.sin(time*.045)*.065);
+    const cy=Math.cos(yaw),sy=Math.sin(yaw),cp=Math.cos(pitch),sp=Math.sin(pitch);
+    // The same camera rotation projects the far sky and the foreground flock.
+    // Its orbit around the foreground adds stronger parallax to nearer star shells.
+    const skyFocal=Math.max(width,height)*.72;
+    let visibleStars=0;
+    ctx.save();ctx.globalCompositeOperation='screen';
+    for(let starIndex=0;starIndex<stars.length;starIndex+=quality.starStride){
+      const star=stars[starIndex];
+      const x=star.x*cy+star.z*sy,z=-star.x*sy+star.z*cy,y=star.y*cp+z*sp;
+      const depth=6-(-star.y*sp+z*cp);if(depth<5)continue;
+      const sx=width*.5+x/depth*skyFocal,syScreen=height*.43-y/depth*skyFocal;
+      if(sx<-12||sx>width+12||syScreen<-12||syScreen>height+12)continue;
+      const size=Math.min(2.6,.35+star.brightness*.75+10/depth);
+      const twinkle=reduced.matches?1:.86+.14*Math.sin(time*.65+star.phase);
+      ctx.globalAlpha=Math.min(.95,(.20+star.brightness*.65)*display.starGain)*twinkle;
+      ctx.drawImage(starSprites[star.tint],sx-size*3,syScreen-size*3,size*6,size*6);
+      visibleStars++;
+    }
+    ctx.restore();canvas.dataset.visibleStars=String(visibleStars);
+    canvas.dataset.cameraOrbit=yaw.toFixed(3);
+    // Broad pools of scattered light give the black space a quiet atmosphere.
+    ctx.save();ctx.globalCompositeOperation='screen';
+    const lamps=[{x:-1.6,y:1.5,z:.9,color:'255,180,108'},{x:1.7,y:.6,z:-.8,color:'105,170,255'}];
+    for(const lamp of lamps){
+      const lx=lamp.x*cy+lamp.z*sy,lz=-lamp.x*sy+lamp.z*cy,ly=lamp.y*cp+lz*sp;
+      const x=width*.5+lx*width*.13,y=height*.44-ly*height*.18,r=Math.max(width,height)*.65;
+      const fog=ctx.createRadialGradient(x,y,0,x,y,r);
+      fog.addColorStop(0,'rgba('+lamp.color+',.075)');fog.addColorStop(.38,'rgba('+lamp.color+',.025)');fog.addColorStop(1,'rgba('+lamp.color+',0)');
+      ctx.fillStyle=fog;ctx.fillRect(0,0,width,height);
+    }
+    ctx.restore();
+    const project=p=>{
+      const x=p.x*cy+p.z*1.6*sy,z=-p.x*sy+p.z*1.6*cy,y=p.y*cp+z*sp;
+      const depth=Math.max(2.5,6-(-p.y*sp+z*cp)),perspective=6/depth;
+      return {x,y,depth,perspective};
+    };
+    // The spine bends physically; each glyph is a rigid sprite placed along it.
+    // Only translation, in-plane rotation and UNIFORM scaling are allowed per glyph.
+    const desired=Math.min(width/5.8,height/4.1)*camera.zoom;
+    scale=scale===1?desired:scale+(desired-scale)*Math.min(1,dt*1.3);
+    const glyphs=[];
+    const roleCounts=names.map((_,role)=>particles.filter(p=>p.role===role).length);
+    const roleIndices=[0,0,0];let waveCount=0;
+    for(const head of particles){
+      head.emerge=Math.min(1,head.emerge+dt*.8);
+      if(head.entry&&time-head.entry.at>2.3)delete head.entry;
+      const nodes=head.ribbon.nodes;
+      const sample=u=>{
+        const f=Math.max(0,Math.min(nodes.length-1,u*(nodes.length-1))),i=Math.min(nodes.length-2,Math.floor(f)),t=f-i;
+        const a=nodes[i],b=nodes[i+1];return project({x:a.x+(b.x-a.x)*t,y:a.y+(b.y-a.y)*t,z:a.z+(b.z-a.z)*t});
+      };
+      // Sample a bounded set of real sentence spines per color. The particle surf
+      // inherits their physical motion, so it surrounds the text rather than a fixed orb.
+      const roleIndex=roleIndices[head.role]++;
+      const stride=Math.max(1,Math.ceil(roleCounts[head.role]/Math.max(1,quality.waveHeads)));
+      if(quality.waveHeads&&roleIndex%stride===0){
+        const count=quality.waveSamples,lanes=quality.waveLanes,phase=head.role*2.094;
+        for(let k=0;k<count;k++){
+          const u=((k/count+time*(.035+head.arousal*.02)+head.id*.071)%1);
+          const f=u*(nodes.length-1),j=Math.min(nodes.length-2,Math.floor(f)),mix=f-j;
+          const a=nodes[j],b=nodes[j+1],tx=b.x-a.x,ty=b.y-a.y,tz=b.z-a.z,len=Math.hypot(tx,ty,tz)||1;
+          const tangent={x:tx/len,y:ty/len,z:tz/len};
+          let nx=-tangent.z,ny=0,nz=tangent.x;
+          if(Math.hypot(nx,nz)<.05){nx=1;nz=0;}
+          const nl=Math.hypot(nx,nz);nx/=nl;nz/=nl;
+          const bx=tangent.y*nz,by=tangent.z*nx-tangent.x*nz,bz=-tangent.y*nx;
+          const wave=u*11-time*(1.15+head.arousal*.7)+phase;
+          const crest=Math.pow(.5+.5*Math.sin(wave),3);
+          const envelope=Math.sin(Math.PI*u)**.5;
+          for(let lane=0;lane<lanes;lane++){
+            const theta=lane/lanes*Math.PI*2+.35*Math.sin(wave*.65)+head.phase*.12;
+            const radius=(.13+.34*crest+.035*Math.sin(u*23+lane+time))*envelope;
+            const lateral=Math.cos(theta)*radius,vertical=Math.sin(theta)*radius;
+            const p=project({x:a.x+(b.x-a.x)*mix+nx*lateral+bx*vertical,y:a.y+(b.y-a.y)*mix+ny*lateral+by*vertical,z:a.z+(b.z-a.z)*mix+nz*lateral+bz*vertical});
+            glyphs.push({head,p,wave:true,opacity:Math.min(.90,(.20+.48*crest)*display.waveGain)*envelope,size:(.50+crest*.75)*p.perspective});waveCount++;
+          }
+        }
+      }
+      let glyphIndex=0;
+      for(const glyph of head.texture.glyphs){
+        const sourceIndex=glyphIndex++;
+        if(glyph.space)continue;
+        const p=sample(glyph.u),before=sample(glyph.u-.008),after=sample(glyph.u+.008);
+        const dx=after.x*after.perspective-before.x*before.perspective,dy=-(after.y*after.perspective-before.y*before.perspective);
+        glyphs.push({head,glyph,p,angle:Math.atan2(dy,dx),size:head.ribbon.length/head.texture.measuredWidth*scale*p.perspective,origin:head.entry?.origins[sourceIndex]});
+      }
+    }
+    canvas.dataset.waveParticles=String(waveCount);
+    canvas.dataset.joiningSpeech=String(particles.some(p=>p.entry));
+    glyphs.sort((a,b)=>b.p.depth-a.p.depth);
+    for(const item of glyphs){
+      const {head,glyph,p,angle,size}=item;
+      if(item.wave){
+        const radius=Math.max(.5,size*Math.min(1.8,scale/110)*Math.pow(p.perspective,.6));
+        ctx.globalAlpha=head.emerge*item.opacity*Math.exp(-Math.max(0,p.depth-3.5)*.33);
+        ctx.drawImage((p.depth>6.8?distantWaveSprites:waveSprites)[head.role],width*.5+p.x*p.perspective*scale-radius*3,height*.43-p.y*p.perspective*scale-radius*3,radius*6,radius*6);
+        continue;
+      }
+      const {advance}=glyph.sprite,bitmap=p.depth>6.8?glyph.sprite.distant:glyph.sprite.bitmap;
+      ctx.globalAlpha=head.emerge*Math.max(.18,Math.min(1,Math.exp(-Math.max(0,p.depth-3.8)*display.depthDensity)));
+      let x=width*.5+p.x*p.perspective*scale,y=height*.43-p.y*p.perspective*scale,rotation=angle,glyphScale=size*display.textSize;
+      if(head.entry&&item.origin){
+        const t=reduced.matches?1:Math.max(0,Math.min(1,(time-head.entry.at-glyph.u*.85)/1.35));
+        const ease=t*t*(3-2*t);
+        x=item.origin.x+(x-item.origin.x)*ease;y=item.origin.y+(y-item.origin.y)*ease;
+        glyphScale=head.entry.fontSize/56+(size*display.textSize-head.entry.fontSize/56)*ease;
+        rotation=angle*ease;ctx.globalAlpha=1;
+      }
+      ctx.save();ctx.translate(x,y);ctx.rotate(rotation);ctx.scale(glyphScale,glyphScale);
+      ctx.drawImage(bitmap,-advance*.5-20,-55);ctx.restore();
+    }
+
+    ctx.globalAlpha=1;
+  }
+  function frame(now){
+    requestAnimationFrame(frame);
+    if(!document.body.classList.contains('exhibition')||document.hidden){last=now;frames=0;measured=now;activeFrame=false;return;}
+    const audioBusy=voiceActive||turn.goal>0||energy>.03;
+    quality=visualBudget.profile(audioBusy);
+    if(!activeFrame){last=now;measured=now;activeFrame=true;return;}
+    const elapsed=now-last;
+    if(elapsed<1000/quality.fps-.8)return;
+    frameStalled=frameStalled||elapsed>150;
+    const dt=Math.min(elapsed/1000,.065);last=now;
+    turn.strength+=(turn.goal-turn.strength)*Math.min(1,dt*1.3);
+    energy*=.9;if(analyser&&bins){analyser.getByteTimeDomainData(bins);let sum=0;for(const b of bins)sum+=((b-128)/128)**2;energy=Math.min(1,Math.sqrt(sum/bins.length)*5);}
+    if(pendingSpeech&&time>=pendingSpeech.ready){releaseSpeech(pendingSpeech);pendingSpeech=null;}
+    const t0=performance.now();if(!reduced.matches){time+=dt;advance(dt);}const t1=performance.now();render(dt);
+    physicsMs=physicsMs*.9+(t1-t0)*.1;drawMs=drawMs*.9+(performance.now()-t1)*.1;
+    frames++;if(now-measured>1500){
+      const fps=frames*1000/(now-measured);
+      visualBudget.observe({fps,costMs:physicsMs+drawMs,audio:audioBusy,seconds:(now-measured)/1000,now,stalled:frameStalled});
+      frameStalled=false;canvas.dataset.visualQuality=String(visualBudget.level);canvas.dataset.visualTargetFps=String(quality.fps);canvas.dataset.audioPriority=String(audioBusy);
+      canvas.dataset.fps=String(Math.round(frames*1000/(now-measured)));canvas.dataset.physicsMs=physicsMs.toFixed(2);canvas.dataset.drawMs=drawMs.toFixed(2);
+      const speeds=particles.map(p=>Math.hypot(p.vx,p.vy,p.vz));
+      canvas.dataset.speedRange=JSON.stringify([Math.min(...speeds),Math.max(...speeds)]);
+      canvas.dataset.emotionalHeads=String(particles.filter(p=>p.arousal>=.8).length);frames=0;measured=now;}
+  }
+  canvas.style.pointerEvents='auto';canvas.style.touchAction='none';canvas.style.cursor='grab';
+  canvas.addEventListener('pointerdown',e=>{camera.drag=true;camera.x=e.clientX;camera.y=e.clientY;canvas.setPointerCapture(e.pointerId);canvas.style.cursor='grabbing';});
+  canvas.addEventListener('pointermove',e=>{if(!camera.drag)return;camera.yaw+=(e.clientX-camera.x)*.006;camera.pitch=Math.max(-1.2,Math.min(1.2,camera.pitch+(e.clientY-camera.y)*.005));camera.x=e.clientX;camera.y=e.clientY;canvas.dataset.view=camera.yaw.toFixed(2)+','+camera.pitch.toFixed(2);});
+  const release=()=>{camera.drag=false;canvas.style.cursor='grab';};canvas.addEventListener('pointerup',release);canvas.addEventListener('pointercancel',release);
+  canvas.addEventListener('wheel',e=>{e.preventDefault();camera.zoom=Math.max(.65,Math.min(1.5,camera.zoom*Math.exp(-e.deltaY*.001)));},{passive:false});
+  canvas.addEventListener('dblclick',()=>{camera.yaw=0;camera.pitch=.22;camera.zoom=1;});
+  canvas.dataset.displayProfile='exhibition-monitor';canvas.dataset.lighting='depth-haze desaturated-distance bright-near';canvas.dataset.dimensions='3';canvas.dataset.renderer='physical-trails-rigid-glyphs';canvas.dataset.groups='3';canvas.dataset.waves='three-role-particle-surf';canvas.dataset.sky='world-space-depth-stars';canvas.dataset.viewportBoundary='open';canvas.dataset.groupCohesion='same-role stronger';
+  requestAnimationFrame(frame);
+  window.thoughtField={
+    audioPriority(active){voiceActive=Boolean(active);},
+    tune(values){
+      const o=flock.options;
+      if(Number.isFinite(values.spacing))o.separationDistance=Math.max(.10,Math.min(.45,values.spacing));
+      for(const key of ['sameRoleAttraction','crossRoleAttraction','sameRoleFollowing','crossRoleFollowing']){
+        if(Number.isFinite(values[key]))o[key]=Math.max(0,Math.min(1,values[key]));
+      }
+      if(Number.isFinite(values.wander))o.wander=Math.max(0,Math.min(1.8,values.wander));
+      canvas.dataset.spacing=String(o.separationDistance);canvas.dataset.attraction=JSON.stringify({same:o.sameRoleAttraction,cross:o.crossRoleAttraction});canvas.dataset.following=JSON.stringify({same:o.sameRoleFollowing,cross:o.crossRoleFollowing});canvas.dataset.wander=String(o.wander);
+    },
+    event(message){
+      if(message.type==='started'){
+        const p=message.performance||{};start(message.who,p.target,p.tone,message.id||null);
+        if(message.text&&names.includes(message.who))pendingSpeech={who:message.who,text:message.text,ready:Infinity};
+      }
+      if(message.type==='said'&&message.text&&names.includes(message.who))pendingSpeech={who:message.who,text:message.text,ready:time+(reduced.matches?0:.5)};
+      if(['cut','human_started'].includes(message.type))pendingSpeech=null;
+      if(['said','cut','human_started'].includes(message.type)){turn.goal=0;const label=document.getElementById('interaction-label');if(label)label.textContent='';}
+    },
+    update(snapshot){
+      if(snapshot.interaction){const p=snapshot.interaction;start(p.who,p.target,p.tone,p.who+':'+p.at);}else if(!snapshot.speaker)turn.goal=0;
+      let changed=false;
+      names.forEach((name,i)=>{
+        const notes=snapshot.puppets[name]?.private_thoughts||[],signature=JSON.stringify(notes);
+        if(states[i].signature===signature)return;queueThought(name,notes.at(-1));changed=true;states[i].signature=signature;states[i].notes=notes;
+        const actor=document.querySelector('.actor[data-name="'+name+'"]');
+        if(actor){actor.dataset.material=notes.length?'formed':'waiting';actor.querySelector('.thought-excerpt').textContent=notes.at(-1)?.feeling||'';}
+      });
+      if(changed)synchronize();
+    },
+    connectAudio(audioContext,source){if(!analyser||analyser.context!==audioContext){analyser=audioContext.createAnalyser();analyser.fftSize=256;bins=new Uint8Array(analyser.fftSize);}source.connect(analyser);}
+  };
+})();
+</script>
+<script>
+(function () {
+  const feed = document.getElementById("feed"), cards = document.getElementById("cards");
+  const $ = id => document.getElementById(id);
+  const NAMES = ["Charlie", "Lucy", "Kaka"];
+  let latestStatus = null, selectedActor = null;
+  function setView(mode) {
+    document.body.classList.toggle("exhibition", mode === "exhibition");
+    $("debug-view").setAttribute("aria-pressed", mode !== "exhibition");
+    $("exhibition-view").setAttribute("aria-pressed", mode === "exhibition");
+    history.replaceState(null, "", "#" + mode);
+  }
+  $("debug-view").onclick = () => setView("debug");
+  $("exhibition-view").onclick = () => setView("exhibition");
+  $("fullscreen").onclick = async () => { try { document.fullscreenElement ? await document.exitFullscreen() : await document.documentElement.requestFullscreen(); } catch(e) { $("fullscreen").textContent = "请使用浏览器全屏"; } };
+  $("filter").onchange = () => { feed.dataset.filter = $("filter").value; };
+  document.addEventListener("fullscreenchange", () => { $("fullscreen").textContent = document.fullscreenElement ? "退出全屏" : "开全屏"; });
+  setView(location.hash === "#exhibition" ? "exhibition" : "debug");
+  document.addEventListener("keydown", e => {
+    if (e.target.closest("input,textarea,select") || e.metaKey || e.ctrlKey || e.altKey) return;
+    if (e.key.toLowerCase() === "d") setView(document.body.classList.contains("exhibition") ? "debug" : "exhibition");
+    if (e.key.toLowerCase() === "f") $("fullscreen").click();
+  });
+  function detail() {
+    if (!selectedActor || !latestStatus) return;
+    const p = latestStatus.puppets[selectedActor] || {};
+    $("detail-name").textContent = selectedActor;
+    $("detail-content").innerHTML = '<div class="kv"><div class="k">Beliefs</div>' + list(p.beliefs) + '</div><div class="kv"><div class="k">Observations of others</div>' + list(Object.entries(p.relations || {}).map(([n,t]) => n + "：" + t)) + '</div>';
+    const notes = p.private_thoughts || [];
+    if (notes.length) {
+      const note = notes[notes.length - 1], section = document.createElement('div');
+      section.className = 'private-state';
+      const title = document.createElement('div'); title.className = 'k'; title.textContent = 'Private current';
+      section.appendChild(title);
+      for (const text of [note.feeling, note.intent].filter(Boolean)) { const line = document.createElement('p'); line.textContent = text; section.appendChild(line); }
+      $('detail-content').appendChild(section);
+    }
+  }
+  document.querySelectorAll(".actor").forEach(el => { el.onclick = () => { selectedActor = el.dataset.name; $("stage-detail").hidden = false; detail(); }; });
+  $("close-detail").onclick = () => { selectedActor = null; $("stage-detail").hidden = true; };
+  document.addEventListener("keydown", e => { if (e.key === "Escape") $("close-detail").click(); });
+  const prev = {};   // 上一次的信念，用来高亮新出现的
+
+  const live = {};   // 正在说的那一行：名字 -> 元素。说完/被打断就地改，不另起一行
+
+  function row(cls, who, text) {
+    const r = document.createElement("div");
+    r.className = "row " + cls;
+    if (who !== null) {
+      const w = document.createElement("div"); w.className = "who " + (who === "新朋友" ? "human" : who);
+      w.textContent = who === "新朋友" ? "新朋友" : who; r.appendChild(w);
+    }
+    const t = document.createElement("div"); t.className = "text"; t.textContent = text; r.appendChild(t);
+    const stick = feed.scrollTop + feed.clientHeight >= feed.scrollHeight - 40;
+    feed.appendChild(r);
+    if (stick) feed.scrollTop = feed.scrollHeight;
+    while (feed.children.length > 400) feed.removeChild(feed.firstChild);
+    return r;
+  }
+
+  function settle(who, cls, text) {   // 把"正在说"的那行定稿；没有就新起一行
+    const r = live[who];
+    delete live[who];
+    if (r && r.isConnected) { r.className = "row " + cls; r.querySelector(".text").textContent = text; }
+    else row(cls, who, text);
+  }
+
+  function onMessage(m) {
+    window.thoughtField?.event(m);
+    if (["started", "said", "cut"].includes(m.type) && m.text) {
+      $("stage-who").textContent = m.who + (m.type === "cut" ? " · Interrupted" : "");
+      $("stage-text").textContent = m.text;
+      const color=({Charlie:'#ffbd78',Lucy:'#79e9ef',Kaka:'#d9aaff'})[m.who]||'#e8e5df';
+      $("stage-text").style.color=color;$("stage-who").style.color=color;
+      $("stage-text").style.opacity='1';$("stage-who").style.opacity='1';
+    }
+    if (m.type === "hearing" && m.text) { $("stage-who").textContent = "Visitor · Speaking"; $("stage-text").textContent = m.text + "…"; }
+
+    switch (m.type) {
+      case "hearing": {                      // 耳朵正在转写的半句话
+        if (m.text) {
+          if (!live["新朋友"] || !live["新朋友"].isConnected) live["新朋友"] = row("said speaking", "新朋友", "");
+          live["新朋友"].querySelector(".text").textContent = m.text + "…";
+        } else if (live["新朋友"]) { const r = live["新朋友"]; delete live["新朋友"]; if (r.isConnected) r.remove(); }
+        break;
+      }
+      case "started": live[m.who] = row("said speaking", m.who, m.text || "…"); break;
+      case "said": settle(m.who, "said", m.text); break;
+      case "cut": settle(m.who, "cut", m.text); break;
+      case "log": {
+        const mm = m.text.match(/^\((\w+) (.*)\)$/);
+        if (mm) row("log", mm[1], mm[2]); else row("log", null, m.text);
+        break;
+      }
+      case "quiet": row("sys", null, `安静了 ${m.seconds} 秒`); break;
+      case "arrived": row("sys", null, "新朋友 来了"); break;
+      case "left": row("sys", null, "新朋友 走了 · 这一场落定"); break;
+      case "woke": row("sys", null, `开机 · 第 ${m.day} 天`); break;
+      case "human_started": break;
+      case "status": renderStatus(m); break;
+    }
+  }
+
+  function list(items, key, highlight) {
+    if (!items || !items.length) return '<div class="empty">—</div>';
+    return "<ul>" + items.map(t => `<li${highlight && !(prev[key] || []).includes(t) ? ' class="new"' : ""}>${esc(t)}</li>`).join("") + "</ul>";
+  }
+  function esc(s) { return String(s).replace(/[&<>]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;"}[c])); }
+
+  function renderUsage(s) {
+    const usage = NAMES.map(n => [n, s.puppets[n]?.usage]);
+    const fmt = n => Number.isFinite(n) ? n.toLocaleString("zh-CN") : "—";
+    for (const key of ["input", "output", "total"]) {
+      const reported = usage.map(([, u]) => u?.totals?.[key]).filter(Number.isFinite);
+      $("token-" + key).textContent = fmt(reported.length ? reported.reduce((a,b) => a+b, 0) : null);
+    }
+    $("token-body").innerHTML = usage.map(([n,u]) => `<tr><td>${n}</td><td>${fmt(u?.reports)}</td>${["input","output","cached","reasoning"].map(k => `<td>${fmt(u?.totals?.[k])}</td>`).join("")}</tr>`).join("");
+    const labels = {private_thought:"内心",line:"台词", rumination:"反刍", seed:"初始化", decision:"旧开口判断"};
+    $("token-latest").textContent = usage.map(([n,u]) => {
+      const r = u?.recent?.at(-1);
+      return n + (r ? ` 最近：${labels[r.task] || r.task} · ${r.model} · ${fmt(r.total)} tokens` : "：尚无用量回报") + (u?.missing ? `（${u.missing} 次未返回用量）` : "");
+    }).join(" ｜ ");
+  }
+
+  function renderStatus(s) {
+    renderUsage(s);
+    window.thoughtField?.update(s);
+    latestStatus = s;
+    document.querySelectorAll(".actor").forEach(el => {
+      const active = s.speaker === el.dataset.name;
+      el.classList.toggle("active", active);
+
+      el.querySelector("small").textContent = active ? "Speaking" : "Listening";
+    });
+    for (const [a,b] of [["Charlie","Lucy"],["Lucy","Kaka"],["Charlie","Kaka"]]) {
+      const observed = s.puppets[a]?.relations?.[b] || s.puppets[b]?.relations?.[a];
+      $("link-" + a + "-" + b).classList.toggle("observed", Boolean(observed));
+    }
+    $("stage-presence").textContent = `Day ${s.day} · ${s.visitor ? "A visitor is here" : "The three of them"}`;
+    detail();
+    $("day").textContent = s.day;
+    $("visitor").textContent = (s.visitor ? "有人" : "没人") + (s.presence_reliable ? "" : "（估）");
+    $("speaker").textContent = s.waiting_for_audio ? "等待声音页面就绪" : (s.speaker || "没人");
+    $("quiet").textContent = s.quiet_for;
+    cards.innerHTML = NAMES.map(n => {
+      const p = s.puppets[n] || {};
+      const rel = Object.entries(p.relations || {}).map(([k, v]) => `${k}：${v}`);
+      const ago = p.last_spoke_ago === null || p.last_spoke_ago === undefined ? "还没开过口" : `${p.last_spoke_ago}s 前开口`;
+      const html = `<div class="card">
+        <h3 class="${s.speaker === n ? "speaking" : ""}" style="color:var(--${n.toLowerCase()})">${n} <small>${ago}</small></h3>
+        <div class="kv"><div class="k">Beliefs</div>${list(p.beliefs, n + ":b", true)}</div>
+        <div class="kv"><div class="k">对另外两位（仅记录）</div>${list(rel, n + ":r", false)}</div>
+        <div class="kv"><div class="k">访客印象（仅记录）</div>${list(p.impressions, n + ":i", false)}</div>
+      </div>`;
+      return html;
+    }).join("");
+    for (const n of NAMES) if (s.puppets[n]) prev[n + ":b"] = s.puppets[n].beliefs.slice();
+  }
+
+  // ---------- 音频走浏览器：麦克风抓取（带回声消除）+ 木偶声音播放 ----------
+  const RATE = 24000;
+  const audio = { on: false, ctx: null, stream: null, proc: null, sources: [] };
+
+  function pcmToBuffer(b64, sr, pan) {
+    const bytes = Uint8Array.from(atob(b64), c => c.charCodeAt(0));
+    const i16 = new Int16Array(bytes.buffer, bytes.byteOffset, bytes.byteLength >> 1);
+    // Explicit channel gains: dog [1, 0], bird [0, 1], mouse [0.5, 0.5].
+    let peak = 0;
+    for (let i = 0; i < i16.length; i++) peak = Math.max(peak, Math.abs(i16[i]) / 32768);
+    console.info("[audio] PCM " + JSON.stringify({peak, samples: i16.length, sr, pan, state: audio.ctx.state}));
+    const buf = audio.ctx.createBuffer(2, i16.length, sr);
+    for (let channel = 0; channel < 2; channel++) {
+      const ch = buf.getChannelData(channel);
+      const gain = Math.max(0, Math.min(1, pan[channel]));
+      for (let i = 0; i < i16.length; i++) ch[i] = i16[i] / 32768 * gain;
+    }
+    return buf;
+  }
+  function playPcm(m) {
+    if (!audio.on || audio.ctx.state !== "running") {
+      audioAck("play_error", m.id); return;
+    }
+    window.thoughtField?.audioPriority(true);
+    const src = audio.ctx.createBufferSource();
+    src.buffer = pcmToBuffer(m.pcm, m.sr, m.pan);
+    src.connect(audio.ctx.destination);
+    window.thoughtField?.connectAudio(audio.ctx, src);
+    src.onended = () => {
+      audio.sources = audio.sources.filter(s => s !== src);
+      window.thoughtField?.audioPriority(audio.sources.length > 0);
+      audioAck(src.cancelled ? "play_error" : "play_ended", m.id);
+    };
+    audio.sources.push(src);
+    src.start();
+    audioAck("play_started", m.id);
+  }
+  function audioAck(type, id) {
+    if (ws && ws.readyState === 1) ws.send(JSON.stringify({type, id}));
+  }
+  function stopPcm() {
+    for (const s of audio.sources) { s.cancelled = true; try { s.stop(); } catch (e) {} }
+    audio.sources = [];
+    window.thoughtField?.audioPriority(false);
+  }
+  function downsample(f32, from, to) {              // 浏览器通常 48k → 24k
+    const ratio = from / to, n = Math.floor(f32.length / ratio), out = new Int16Array(n);
+    for (let i = 0; i < n; i++) {
+      const a = Math.floor(i * ratio), b = Math.floor((i + 1) * ratio);
+      let s = 0; for (let j = a; j < b; j++) s += f32[j];
+      const v = s / Math.max(1, b - a);
+      out[i] = Math.max(-32768, Math.min(32767, Math.round(v * 32767)));
+    }
+    return out;
+  }
+  async function listMics() {   // 拿到权限之后才看得到设备名
+    const devs = (await navigator.mediaDevices.enumerateDevices()).filter(d => d.kind === "audioinput");
+    const sel = $("mic"), saved = (() => { try { return localStorage.getItem("mic") || ""; } catch (e) { return ""; } })();
+    sel.innerHTML = '<option value="">麦克风：系统默认</option>' +
+      devs.map(d => `<option value="${d.deviceId}">${esc(d.label || "麦克风")}</option>`).join("");
+    if ([...sel.options].some(o => o.value === saved)) sel.value = saved;
+  }
+  $("mic").onchange = () => {
+    try { localStorage.setItem("mic", $("mic").value); } catch (e) {}
+    if (audio.stream) { micOff(); audioOn().catch(err => alert("打不开麦克风：" + err.message)); }
+  };
+
+  async function soundOn() {
+    if (!audio.ctx) audio.ctx = new (window.AudioContext || window.webkitAudioContext)();
+    audio.ctx.onstatechange = event => console.info("[audio] context", event.target.state);
+    await audio.ctx.resume();
+    audio.on = true;
+    if (ws && ws.readyState === 1) ws.send(JSON.stringify({type: "audio_ready"}));
+    $("sound").textContent = "声音：开";
+  }
+  async function audioOn() {
+    $("audio").disabled = true;
+    $("audio").textContent = "等待麦克风权限…";
+    try {
+      const want = $("mic").value || (() => { try { return localStorage.getItem("mic") || ""; } catch (e) { return ""; } })();
+      audio.stream = await navigator.mediaDevices.getUserMedia({
+        audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true, channelCount: 1,
+                 ...(want ? { deviceId: { exact: want } } : {}) }
+      });
+      await soundOn();
+      await listMics();
+      const track = audio.stream.getAudioTracks()[0];
+      $("audio").title = "正在用：" + (track ? track.label : "?");
+      const src = audio.ctx.createMediaStreamSource(audio.stream);
+      const proc = audio.ctx.createScriptProcessor(4096, 1, 1);
+      proc.onaudioprocess = e => {
+        if (ws.readyState !== 1 || ws.bufferedAmount > RATE * 2) return;
+        ws.send(downsample(e.inputBuffer.getChannelData(0), audio.ctx.sampleRate, RATE).buffer);
+      };
+      src.connect(proc);
+      proc.connect(audio.ctx.destination);
+      audio.proc = proc;
+      $("audio").textContent = "麦克风：开";
+    } catch (e) {
+      micOff();
+      throw e;
+    } finally { $("audio").disabled = false; }
+  }
+  function micOff() {
+    if (audio.proc) audio.proc.disconnect();
+    if (audio.stream) audio.stream.getTracks().forEach(t => t.stop());
+    audio.stream = audio.proc = null;
+    $("audio").textContent = "麦克风：关";
+  }
+  function audioOff() {
+    stopPcm();
+    if (ws && ws.readyState === 1) ws.send(JSON.stringify({type: "audio_off"}));
+    micOff();
+    if (audio.ctx) audio.ctx.close();
+    audio.on = false; audio.ctx = null;
+    $("sound").textContent = "声音：关";
+  }
+  $("sound").onclick = () => { audio.on ? audioOff() : soundOn().catch(err => alert("打不开声音：" + err.message)); };
+  $("audio").onclick = () => { audio.stream ? micOff() : audioOn().catch(err => alert("打不开麦克风：" + err.message)); };
+
+  let ws;
+  function connect() {
+    ws = new WebSocket((location.protocol === "https:" ? "wss://" : "ws://") + location.host + "/ws");
+    ws.onopen = () => { if (audio.on) ws.send(JSON.stringify({type: "audio_ready"})); $("conn").textContent = "已连接"; $("conn").classList.add("on"); };
+    ws.onclose = () => { stopPcm(); $("conn").textContent = "断开，重连中…"; $("conn").classList.remove("on"); setTimeout(connect, 1500); };
+    ws.onmessage = e => {
+      const m = JSON.parse(e.data);
+      if (m.type === "play") {
+        try { playPcm(m); } catch (e) { audioAck("play_error", m.id); }
+      }
+      else if (m.type === "audio_rejected") { audioOff(); alert("另一个页面正在使用音频，请先关闭那个页面的音频。"); }
+      else if (m.type === "stop") stopPcm();
+      else onMessage(m);
+    };
+  }
+  // Standalone sample: no live engine connection.
+
+  // Default to playback only. Browsers may require the first user gesture.
+  function defaultSound() {
+    soundOn().catch(() => { $("sound").textContent = "声音：点击开启"; });
+    if (audio.ctx && audio.ctx.state !== "running") $("sound").textContent = "声音：点击开启";
+  }
+  const displayOnly = new URLSearchParams(location.search).get("display") === "1";
+  if (!displayOnly) defaultSound();
+  function unlockSound(e) {
+    if (displayOnly || e.target.closest("#sound, #audio, #mic")) return;
+    if (audio.ctx && audio.ctx.state === "suspended") soundOn().catch(() => {});
+  }
+  document.addEventListener("pointerdown", unlockSound, {once: true});
+  document.addEventListener("keydown", unlockSound, {once: true});
+
+
+  setView('exhibition');
+  document.querySelector('.stage-label').textContent='THREE FLOCKS / ALL-ENGLISH LOAD TEST';
+  $('conn').textContent='Sample data';
+  for(const id of ['sound','audio','send','interrupt'])$(id).disabled=true;
+  $('say').disabled=true;$('say').placeholder='此页为交互视觉示例；真实对话请使用主程序。';
+  const previewState={"type": "status", "day": 1, "speaker": "Charlie", "visitor": false, "quiet_for": 0, "puppets": {"Charlie": {"private_thoughts": [{"at": "sample", "context_at": "sample", "feeling": "I wanted to help, but I think I was trying to prove that they still need me.", "intent": "I want to leave room for Lucy to answer in her own way."}], "beliefs": [], "relations": {}, "last_spoke_ago": null}, "Lucy": {"private_thoughts": [{"at": "sample", "context_at": "sample", "feeling": "I feel relieved when they wait, but I am still unsure how much I can say.", "intent": "I want to ask one question instead of hiding my words again."}], "beliefs": [], "relations": {}, "last_spoke_ago": null}, "Kaka": {"private_thoughts": [{"at": "sample", "context_at": "sample", "feeling": "They noticed his answer first. I wish that did not matter so much to me.", "intent": "I want to say something that belongs to me, without making it a competition."}], "beliefs": [], "relations": {}, "last_spoke_ago": null}}};
+  const scenes=[
+    {who:'Charlie',target:'Lucy',tone:'curious',text:'Lucy, would you rather answer yourself, or have us stay with you?'},
+    {who:'Lucy',target:'Kaka',tone:'hesitant',text:'Kaka, I want to finish my thought. Could you wait a moment?'},
+    {who:'Kaka',target:'Charlie',tone:'emphatic',text:'You keep answering for her, then tell us you are only trying to help.'}
+  ];
+  let sceneIndex=0,auto=true;
+  const dock=document.createElement('section');dock.className='preview-debug-tools';document.querySelector('header').after(dock);
+  const controls=document.createElement('nav');controls.className='preview-controls';
+  controls.setAttribute('aria-label','对话交互预览');
+  scenes.forEach((scene,i)=>{
+    const button=document.createElement('button');button.textContent=scene.who+' → '+scene.target;
+    button.onclick=()=>{auto=false;showScene(i);};controls.appendChild(button);
+  });
+  const cut=document.createElement('button');cut.textContent='Interrupt';
+  cut.onclick=()=>{auto=false;onMessage({type:'human_started'});previewState.speaker=null;renderStatus(previewState);$('stage-who').textContent='Interrupted';$('stage-text').textContent='The heads settle, while the ribbons keep moving with their own inertia.';};
+  controls.appendChild(cut);
+  const resume=document.createElement('button');resume.textContent='Auto dialogue';
+  resume.onclick=()=>{auto=true;showScene((sceneIndex+1)%3);};controls.appendChild(resume);
+  dock.appendChild(controls);
+  function showScene(i){
+    sceneIndex=i;const scene=scenes[i];
+    previewState.speaker=scene.who;renderStatus(previewState);
+    onMessage({type:'started',who:scene.who,text:scene.text,performance:{target:scene.target,tone:scene.tone}});
+    const speechVersion=(window.previewSpeechVersion||0)+1;window.previewSpeechVersion=speechVersion;
+    setTimeout(()=>{if(window.previewSpeechVersion===speechVersion)onMessage({type:'said',who:scene.who,text:scene.text});},3800);
+    controls.querySelectorAll('button').forEach((b,j)=>b.setAttribute('aria-pressed',String(j===i)));
+  }
+
+  const loadPanel=document.createElement('div');loadPanel.className='load-panel';
+  const loadTitle=document.createElement('span');loadTitle.textContent='English sentences';loadPanel.appendChild(loadTitle);
+  const meter=document.createElement('span');meter.className='load-meter';
+  const contexts=['Right now,','When the room grows quiet,','After hearing the last reply,','As we wait for one another,','When the conversation changes direction,','Before I answer again,'];
+  const samples={
+    Charlie:[
+      'I want to help without deciding what everyone else needs',
+      'I am trying to listen before I offer another solution',
+      'I feel useful when someone trusts me with a small question',
+      'I wish I could admit that I do not know the answer',
+      'I want to stay close without taking up all the space',
+      'I notice how quickly I turn uncertainty into advice',
+      'I am learning that waiting can also be a way to care',
+      'I want my next words to leave room for someone else',
+      'I feel nervous when I cannot make the situation better',
+      'I hope they will still want me here when I stop performing'
+    ],
+    Lucy:[
+      'I want to finish one thought without being hurried',
+      'I feel safer when a pause does not have to mean rejection',
+      'I am not sure whether I need an answer or a little company',
+      'I want to ask for more time without apologizing for it',
+      'I notice the small space between wanting to speak and speaking',
+      'I wish I could trust that my quietness is still being heard',
+      'I am trying to stay present instead of disappearing',
+      'I feel a little braver when nobody finishes my sentence',
+      'I want my uncertainty to be allowed in this conversation',
+      'I hope I can say something small and let it be enough'
+    ],
+    Kaka:[
+      'I want to be noticed without making this a competition',
+      'I feel proud of my answer and uneasy about needing praise',
+      'I am trying to listen without preparing an impressive reply',
+      'I wish their attention did not matter so much to me',
+      'I want to disagree without making someone feel smaller',
+      'I notice how quickly I mistake silence for indifference',
+      'I am learning to leave a question open for a little longer',
+      'I feel exposed when I cannot hide behind being certain',
+      'I want to say something honest even if it is not remarkable',
+      'I hope I can belong here without having to be exceptional'
+    ]
+  };
+  function setLoad(total){
+    const each=total/3;$('stage').dataset.sentenceLimit=String(each);
+    for(const name of ['Charlie','Lucy','Kaka']){
+      previewState.puppets[name].private_thoughts=Array.from({length:each},(_,i)=>({
+        at:'sample-'+i,context_at:'sample',feeling:contexts[Math.floor(i/10)]+' '+samples[name][i%10]+'.',intent:''
+      }));
+    }
+    renderStatus(previewState);
+    loadPanel.querySelectorAll('button').forEach(button=>button.setAttribute('aria-pressed',String(Number(button.textContent)===total)));
+    loadPanel.dataset.total=String(total);
+  }
+  for(const total of [30,60,120,180]){const b=document.createElement('button');b.textContent=String(total);b.onclick=()=>setLoad(total);loadPanel.appendChild(b);}
+  loadPanel.appendChild(meter);dock.appendChild(loadPanel);
+  setInterval(()=>{const field=$('thought-field');meter.textContent=(field.dataset.sentenceCount||'0')+' ribbons · '+(field.dataset.fps||'…')+' fps';},1000);
+
+  const tuning=document.createElement('details');tuning.className='flock-tuning';
+  const summary=document.createElement('summary');summary.textContent='Flock behavior / glow';tuning.appendChild(summary);
+  const sliders=[['Spacing',65,v=>({spacing:.12+v*.0028})],['Same-color attraction',40,v=>({sameRoleAttraction:v*.0015})],['Cross-color attraction',10,v=>({crossRoleAttraction:v*.0004})],['Same-color following',60,v=>({sameRoleFollowing:v*.005})],['Cross-color following',15,v=>({crossRoleFollowing:v*.002})],['Wandering',70,v=>({wander:.2+v*.012})]];
+  for(const [name,value,map]of sliders){
+    const label=document.createElement('label');label.textContent=name;
+    const input=document.createElement('input');input.type='range';input.min='0';input.max='100';input.value=String(value);input.setAttribute('aria-label',name);
+    const output=document.createElement('output');output.textContent=String(value);
+    input.oninput=()=>{output.textContent=input.value;window.thoughtField.tune(map(Number(input.value)));};
+    label.appendChild(input);label.appendChild(output);tuning.appendChild(label);
+    window.thoughtField.tune(map(value));
+  }
+  const glowKey=document.createElement('p');glowKey.textContent='Text color: character. Glow: feeling — blue uneasy, gold hopeful, mint calm, pink excited.';tuning.appendChild(glowKey);
+  dock.appendChild(tuning);
+  setLoad(60);
+  showScene(0);
+  setInterval(()=>{if(auto)showScene((sceneIndex+1)%3);},8500);
+
+  function send() {
+    const v = $("say").value.trim();
+    if (!v || ws.readyState !== 1) return;
+    ws.send(JSON.stringify({ type: "say", text: v }));
+    $("say").value = "";
+  }
+  $("send").onclick = send;
+  $("say").addEventListener("keydown", e => { if (e.key === "Enter") send(); });
+  $("interrupt").onclick = () => { if (ws.readyState === 1) ws.send(JSON.stringify({ type: "interrupt" })); };
+})();
+</script>
+</body>
+</html>
