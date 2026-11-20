@@ -1,0 +1,61 @@
+{
+  "note": "Local browser snapshots, not a hardware-independent guarantee.",
+  "before": [
+    {
+      "allEnglish": true,
+      "drawMs": 3.3,
+      "fps": 116,
+      "physicsMs": 0.59,
+      "sentences": 60
+    },
+    {
+      "allEnglish": true,
+      "drawMs": 10.78,
+      "fps": 56,
+      "physicsMs": 2.58,
+      "sentences": 120
+    },
+    {
+      "allEnglish": true,
+      "drawMs": 16.31,
+      "fps": 34,
+      "physicsMs": 6.46,
+      "sentences": 180
+    }
+  ],
+  "glowBeforeFinalDrawOptimization": [
+    {
+      "drawMs": 3.98,
+      "fps": 114,
+      "moods": {
+        "calm": 14,
+        "excited": 4,
+        "hopeful": 14,
+        "neutral": 10,
+        "sad": 2,
+        "tense": 4,
+        "uneasy": 12
+      },
+      "physicsMs": 0.7,
+      "sentences": 60
+    },
+    {
+      "drawMs": 5.67,
+      "fps": 95,
+      "physicsMs": 1.59,
+      "sentences": 120
+    },
+    {
+      "drawMs": 32.25,
+      "fps": 15,
+      "physicsMs": 29.29,
+      "sentences": 180
+    }
+  ],
+  "final180": {
+    "drawMs": 20.16,
+    "fps": 25,
+    "physicsMs": 19.51,
+    "sentences": 180
+  }
+}

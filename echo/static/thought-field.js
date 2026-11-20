@@ -9,7 +9,7 @@
   const ctx=canvas.getContext('2d',{alpha:true});
   const reduced=matchMedia('(prefers-reduced-motion: reduce)');
   const states=names.map(()=>({signature:'',notes:[]}));
-  const spokenItems=[];let pendingSpeech=null;
+  const spokenItems=[];let pendingSpeech=null,runId=null;
   // Keep the latest pending thought per role: frequent updates must not create an ever-growing queue.
   const thoughtCard=document.getElementById('inner-thought'),thoughtQueue=[];
   const shownThoughts=new Map();let thoughtTimer=null;
@@ -360,11 +360,25 @@
       if(['said','cut','human_started'].includes(message.type)){turn.goal=0;const label=document.getElementById('interaction-label');if(label)label.textContent='';}
     },
     update(snapshot){
+      if(snapshot.run_id && snapshot.run_id!==runId){
+        runId=snapshot.run_id;pendingSpeech=null;
+        clearTimeout(thoughtTimer);thoughtTimer=null;thoughtQueue.length=0;shownThoughts.clear();
+        if(thoughtCard)thoughtCard.hidden=true;
+        states.forEach(state=>{state.signature='';state.notes=[];});
+        particles.length=0;spokenItems.length=0;
+        for(const item of snapshot.exhibition_speech||[]){
+          const role=names.indexOf(item.who);
+          if(role>=0)spokenItems.push({key:'restored:'+item.id,text:item.text,role,light:moodLight('',role)});
+        }
+        synchronize();
+      }
       if(snapshot.interaction){const p=snapshot.interaction;start(p.who,p.target,p.tone,p.who+':'+p.at);}else if(!snapshot.speaker)turn.goal=0;
       let changed=false;
       names.forEach((name,i)=>{
-        const notes=snapshot.puppets[name]?.private_thoughts||[],signature=JSON.stringify(notes);
-        if(states[i].signature===signature)return;queueThought(name,notes.at(-1));changed=true;states[i].signature=signature;states[i].notes=notes;
+        const notes=snapshot.puppets[name]?.exhibition_thoughts??snapshot.puppets[name]?.private_thoughts??[],signature=JSON.stringify(notes);
+        const state=states[i];
+        if(state.signature===signature)return;
+        queueThought(name,notes.at(-1));changed=true;state.signature=signature;state.notes=notes;
         const actor=document.querySelector('.actor[data-name="'+name+'"]');
         if(actor){actor.dataset.material=notes.length?'formed':'waiting';actor.querySelector('.thought-excerpt').textContent=notes.at(-1)?.feeling||'';}
       });

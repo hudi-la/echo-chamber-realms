@@ -4,6 +4,7 @@
 from .settings import parameter, parameters, rule
 import asyncio
 import json
+from uuid import uuid4
 from pathlib import Path
 from typing import Iterable
 
@@ -54,6 +55,12 @@ class Monitor:
         self.on_audio_ready = None
         self.on_playback = None
         self.on_audio_disconnect = None
+        self.run_id = uuid4().hex
+        self._initial_thoughts = {
+            p.name: {json.dumps(note, sort_keys=True) for note in p.memory.private_thoughts}
+            for p in self.puppets
+        }
+        self._exhibition_speech = []
 
     # --- 对外：给 puppet 当 log 用 ---
 
@@ -70,6 +77,8 @@ class Monitor:
         now = self.room.clock.now()
         return {
             "type": "status",
+            "run_id": self.run_id,
+            "exhibition_speech": list(self._exhibition_speech),
             "day": self.room.day,
             "waiting_for_audio": self.waiting_for_audio,
             "audio_connected": self.audio_ready.is_set(),
@@ -82,6 +91,9 @@ class Monitor:
                 p.name: {
                     "usage": (p.brain.token_usage.snapshot() if getattr(getattr(p, 'brain', None), 'token_usage', None) is not None else None),
                     "private_thoughts": p.memory.private_thoughts[-parameter("thoughts.prompt_keep"):] if rule("memory.private_thoughts_enabled") else [],
+                    "exhibition_thoughts": [note for note in p.memory.private_thoughts
+                        if json.dumps(note, sort_keys=True) not in self._initial_thoughts[p.name]]
+                        if rule("memory.private_thoughts_enabled") else [],
                     "beliefs": p.memory.beliefs,
                     "relations": p.memory.relations,
                     "impressions": [i["text"] for i in p.memory.impressions[-5:]],
@@ -93,6 +105,9 @@ class Monitor:
     # --- 广播 ---
 
     def broadcast(self, msg: dict) -> None:
+        if msg["type"] == "said" and msg.get("who") in {p.name for p in self.puppets}:
+            self._exhibition_speech.append({"who": msg["who"], "text": msg.get("text", ""), "id": uuid4().hex})
+            del self._exhibition_speech[:-9]
         if msg["type"] not in ("status", "play", "stop", "hearing"):  # 快照、音频、半句话不进历史
             self._history.append(msg)
             del self._history[:-parameter("monitor.history_entries")]

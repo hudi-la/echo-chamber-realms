@@ -1,0 +1,37 @@
+{
+  "note": "CPU physics only; browser drawing measured separately.",
+  "results": [
+    {
+      "sentences": 30,
+      "heads": 30,
+      "tailNodes": 1110,
+      "physicsMeanMs": 0.68,
+      "physicsP95Ms": 1.21,
+      "stable": true
+    },
+    {
+      "sentences": 60,
+      "heads": 60,
+      "tailNodes": 2220,
+      "physicsMeanMs": 1.26,
+      "physicsP95Ms": 1.46,
+      "stable": true
+    },
+    {
+      "sentences": 120,
+      "heads": 120,
+      "tailNodes": 4440,
+      "physicsMeanMs": 2.54,
+      "physicsP95Ms": 3.3,
+      "stable": true
+    },
+    {
+      "sentences": 180,
+      "heads": 180,
+      "tailNodes": 6660,
+      "physicsMeanMs": 3.84,
+      "physicsP95Ms": 4.95,
+      "stable": true
+    }
+  ]
+}

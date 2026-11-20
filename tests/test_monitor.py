@@ -91,3 +91,25 @@ async def test_delivery_survives_status_refresh_and_clears_on_interruption(clock
     finally:
         pump.cancel()
         await asyncio.gather(pump, return_exceptions=True)
+
+
+def test_exhibition_state_belongs_to_engine_run(clock, tmp_path):
+    from types import SimpleNamespace
+    memory = PuppetMemory.load('Lucy', tmp_path)
+    memory.add_private_thought('old feeling', 'old intent', 'before', 'before')
+    puppet = SimpleNamespace(name='Lucy', memory=memory, last_spoke_at=None)
+    room = Room(clock, Transcript(), Floor(), lambda: CFG)
+    monitor = Monitor(room, [puppet])
+    assert monitor.snapshot()['puppets']['Lucy']['exhibition_thoughts'] == []
+    memory.add_private_thought('new feeling', 'new intent', 'now', 'now')
+    monitor.broadcast({'type': 'said', 'who': 'Lucy', 'text': 'Hello'})
+    first = monitor.snapshot()
+    refreshed = monitor.snapshot()
+    assert refreshed['run_id'] == first['run_id']
+    assert refreshed['exhibition_speech'][0]['text'] == 'Hello'
+    assert refreshed['puppets']['Lucy']['exhibition_thoughts'][0]['feeling'] == 'new feeling'
+    restarted = Monitor(room, [puppet]).snapshot()
+    assert restarted['run_id'] != first['run_id']
+    assert restarted['exhibition_speech'] == []
+    assert restarted['puppets']['Lucy']['exhibition_thoughts'] == []
+    assert len(memory.private_thoughts) == 2
