@@ -184,7 +184,7 @@ async def _run(c, fake, reset=None, seed=False):
     action_events = room.subscribe()
     async def stage_events():
         while True:
-            stage.poll()
+            performance.poll()
             while not action_events.empty():
                 event = action_events.get_nowait()
                 if isinstance(event, HumanStarted):

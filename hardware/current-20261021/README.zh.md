@@ -4,7 +4,7 @@ Python英文版：项目根目录的 `启动英文版.command`，等同于 `scri
 
 Arduino Uno：烧录本目录 `ThreePuppets_SerialPerformance`，编译时使用本目录 `PuppetEyes` 库。临时DogSequence、DogPitchCheck、DogYawSweep不是主程序固件。
 
-2026-11-18展厅临时配置：狗左右舵机D7禁用；该库的 `ECR_DOG_YAW_ENABLED` 默认0，初始化及运行均不attach该轴。其余功能保留。维修后经用户确认再恢复为1并编译烧录。坏舵机的电源及信号线保持断开。
+查理的左右眼轴使用 D7，固件会初始化该引脚并输出舵机控制信号。现场当前未接这颗舵机。
 
 当前串口 `/dev/cu.usbmodem31201`，115200，继电器HIGH启用。使用前关闭Arduino IDE串口监视器；启动后应收到READY ECR2和OK CONFIG。声音页面为 http://127.0.0.1:8765 。
 

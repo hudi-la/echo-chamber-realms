@@ -107,9 +107,18 @@ def rules():
     names = data['characters']['names']
     if set(names) != {'Charlie', 'Lucy', 'Kaka'} or len(names) != 3:
         raise ValueError('rules.toml: character identities must match the implemented three puppets')
+    weights = data['conversation'].get('speaker_weights', {})
+    if not isinstance(weights, Mapping) or any(
+        name not in names or type(weight) is not int or weight <= 0
+        for name, weight in weights.items()
+    ):
+        raise ValueError('rules.toml: conversation.speaker_weights requires positive integer weights for known characters')
     order = data['characters']['stage_left_to_right']
     if sorted(order) != sorted(names):
         raise ValueError('rules.toml: stage order must contain each character exactly once')
+    performance = data['performance']
+    if 'random_gaze' not in performance and 'avert_and_return' in performance:
+        data = {**data, 'performance': {**performance, 'random_gaze': performance['avert_and_return']}}
     return data
 
 def _value(data, path):
@@ -210,7 +219,7 @@ def validate_controls():
     for section, keys in {
         'conversation': ('prefer_named_character', 'avoid_repeat_speaker', 'ignore_own_speech_event'),
         'memory': ('private_thoughts_enabled', 'reflection_enabled', 'allow_belief_changes', 'require_change_reason', 'save_companion_observations', 'save_visitor_impressions'),
-        'performance': ('body_during_speech', 'move_eyes', 'avert_and_return'),
+        'performance': ('body_during_speech', 'move_eyes', 'random_gaze'),
     }.items():
         for key in keys:
             if not isinstance(policy[section][key], bool):

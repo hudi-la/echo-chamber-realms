@@ -105,7 +105,7 @@ async def test_long_active_speech_has_no_absolute_duration_limit():
 async def test_three_candidates_can_choose_slower_response(monkeypatch):
     # All three choose independently; selecting the last candidate demonstrates
     # that the first completed API request does not automatically win.
-    monkeypatch.setattr('echo.floor.random.choice', lambda names: names[-1])
+    monkeypatch.setattr('echo.floor.random.choices', lambda names, *, weights: [names[-1]])
     floor = Floor(window=0.03)
     async def stop(): return ''
     tasks = []
@@ -131,7 +131,7 @@ async def test_human_invalidates_pending_candidates():
 
 
 async def test_three_puppets_select_only_one_composer_and_yield(clock, tmp_path, monkeypatch):
-    monkeypatch.setattr('echo.floor.random.choice', lambda names: names[-1])
+    monkeypatch.setattr('echo.floor.random.choices', lambda names, *, weights: [names[-1]])
     brains = [(name, FakeBrain([Decision(True, name + '的台词', intent=name + '的想法')]))
               for name in ('Charlie', 'Lucy', 'Kaka')]
     room, puppets, _, _, _ = build(clock, tmp_path, brains)
@@ -382,6 +382,9 @@ async def test_address_overrides_previous_speaker_and_never_calls_decide(clock, 
         await settle(clock)
         assert room.floor.holder == 'Lucy'
         assert len(dict(brains)['Lucy'].calls) == 1
+        system, _ = dict(brains)['Lucy'].calls[0]
+        assert '只说一句短句' in system
+        assert '如果需要解释，可以说两句短句' in system
         assert dict(brains)['Charlie'].calls == dict(brains)['Kaka'].calls == []
     finally:
         for task in tasks: task.cancel()

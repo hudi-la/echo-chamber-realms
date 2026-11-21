@@ -1,4 +1,4 @@
-"""Sparse sentence performance, clocked from confirmed playback. No delayed action queue."""
+"""Speech performance timed from confirmed playback, with a neutral gaze after each completed turn."""
 
 from .settings import parameter, rule
 import os
@@ -106,6 +106,13 @@ class Performance:
         self.stage, self.now, self.rng = stage, now, rng or random.Random()
         self.active = None
         self.turn = None
+        self._pending_center: set[str] = set()
+
+    def poll(self):
+        self.stage.poll()
+        for name in tuple(self._pending_center):
+            if self.stage.look(name, 0, False, True) is not False:
+                self._pending_center.remove(name)
 
     def _look(self, direction, initial=False):
         t = self.turn
@@ -114,7 +121,7 @@ class Performance:
         if not getattr(self.stage, 'can_look', lambda name: True)(t['name']):
             return False
         result = self.stage.look(t['name'], direction,
-                                 False if initial else self.rng.random() < parameter('eyes.blink_probability'),
+                                 initial or self.rng.random() < parameter('eyes.blink_probability'),
                                  t['tone'] in rule('performance.smooth_tones'))
         if result is False:
             return False
@@ -125,6 +132,7 @@ class Performance:
 
     def start(self, name, text, sentence, duration):
         self.pause()
+        self._pending_center.discard(name)
         if sentence == 0 or self.turn is None or self.turn['name'] != name:
             info = getattr(text, 'performance', {})
             audience = rule('performance.audience_target')
@@ -134,7 +142,7 @@ class Performance:
             self.turn = dict(name=name, target=target, tone=info.get('tone', rule('performance.tones')[0]),
                              main=gaze(name, target), current=None, wait=0, initial=True)
         t = self.turn
-        self.stage.poll()
+        self.poll()
         self.stage.out(f"[表演] {name} → {t['target']} / {t['tone']} / 第{sentence + 1}句")
         now = self.now()
         self.active = dict(name=name, at=now, duration=duration, last=now, body_at=now)
@@ -146,7 +154,7 @@ class Performance:
             self.stage.body(name, parameter('body.lease_ms'))
 
     def tick(self):
-        self.stage.poll()
+        self.poll()
         a, t = self.active, self.turn
         if not a:
             return
@@ -158,16 +166,21 @@ class Performance:
             a['body_at'] = now
         if t['initial']:
             self._look(t['main'], initial=True)
-        elif rule('performance.avert_and_return') and t['wait'] <= 0:
-            # Alternate brief aversion and returning to the intended interlocutor.
-            direction = (t['main'] if t['current'] != t['main'] else
-                         self.rng.choice([d for d in (0, 1, 2) if d != t['main']]))
+        elif rule('performance.random_gaze') and t['wait'] <= 0:
+            direction = self.rng.choice([direction for direction in range(9) if direction != t['current']])
             self._look(direction)
 
     def pause(self):
         if self.active:
             self.stage.send('STOP')
         self.active = None
+
+    def finish(self):
+        turn = self.turn
+        self.stop()
+        if turn is not None and turn['current'] not in (None, 0):
+            self._pending_center.add(turn['name'])
+            self.poll()
 
     def stop(self):
         self.pause()

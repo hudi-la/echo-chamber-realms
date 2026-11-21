@@ -156,6 +156,16 @@ class Puppet:
         if not await self.room.floor.request(self.name, self._stop_speech, preferred=preferred):
             return
         system, situation = self.system_prompt(), self.situation()
+        if self.name == "Lucy":
+            if self.brain.language == "en":
+                direction = "Use one short spoken sentence expressing a single idea."
+                if preferred:
+                    direction += " If the question needs an explanation, you may use two short sentences."
+            else:
+                direction = "只说一句短句，只表达一个意思。"
+                if preferred:
+                    direction += "如果需要解释，可以说两句短句。"
+            system += "\n\n" + direction
         decision = Decision(True)  # Compatibility argument only; no decide() call.
         self.log(f"  ({self.name} 程序选中（{self.clock.now() - selection_started:.2f}s），开始写台词)")
         # 预留发言权写台词；此时尚未播放，人类开口会取消合成前的准备。

@@ -56,7 +56,14 @@ class Floor:
             addressed = [n for n in eligible if candidates[n][2]] if rule("conversation.prefer_named_character") else []
             choices = addressed or ([n for n in eligible if n != self._last_winner]
                                     if rule("conversation.avoid_repeat_speaker") else eligible) or eligible
-            winner = random.choice(choices) if rule("conversation.selection") == "random" else choices[0]
+            if rule("conversation.selection") == "random":
+                weights = rule("conversation").get("speaker_weights", {})
+                if weights and not addressed:
+                    winner = random.choices(choices, weights=[weights.get(name, 1) for name in choices])[0]
+                else:
+                    winner = random.choice(choices)
+            else:
+                winner = choices[0]
             self.try_acquire(winner, candidates[winner][0])
             self._last_winner = winner
         for name, (_, future, _) in candidates.items():

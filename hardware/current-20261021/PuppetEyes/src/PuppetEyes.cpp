@@ -1,15 +1,9 @@
 #include "PuppetEyes.h"
 
-// Exhibition workaround: keep the failed dog yaw servo completely unattached.
-#ifndef ECR_DOG_YAW_ENABLED
-#define ECR_DOG_YAW_ENABLED 0
-#endif
-
 namespace {
 // 按实际接线排序，不使用D0/D1；D12/D13直流电机保持关闭。
 const uint8_t PINS[11] = {A0, A1, 2, 3, 4, 5, 6, 7, 8, 9, 10};
 const uint8_t NONE = 255;
-const bool YAW_ENABLED[3] = {true, true, ECR_DOG_YAW_ENABLED != 0};
 struct Calibration {
   uint8_t yaw, pitch, lidL, lidR;
   int left, right, up, down;
@@ -53,7 +47,7 @@ void PuppetEyes::restLids(uint8_t p) {
 }
 void PuppetEyes::writeEyes(uint8_t p) {
   const Calibration &c = CAL[p];
-  if (YAW_ENABLED[p]) motors[c.yaw].writeMicroseconds(motion[p].yaw);
+  motors[c.yaw].writeMicroseconds(motion[p].yaw);
   if (c.pitch != NONE) motors[c.pitch].writeMicroseconds(motion[p].pitch);
 }
 
@@ -72,7 +66,7 @@ void PuppetEyes::begin() {
     const Calibration &c = CAL[p];
     motion[p] = Motion();
     writeEyes(p);
-    if (YAW_ENABLED[p]) motors[c.yaw].attach(PINS[c.yaw]);
+    motors[c.yaw].attach(PINS[c.yaw]);
     if (c.pitch != NONE) motors[c.pitch].attach(PINS[c.pitch]);
   }
   motors[10].writeMicroseconds(1500);

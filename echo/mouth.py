@@ -216,15 +216,18 @@ class TtsMouth:
             completed = False
             raise
         finally:
+            if self._stop_evt.is_set():
+                completed = False
             if self.performance:
-                self.performance.stop()
+                if completed:
+                    self.performance.finish()
+                else:
+                    self.performance.stop()
             if pending is not None:
                 if not pending.done():
                     pending.cancel()
                 elif not pending.cancelled():
                     pending.exception()
-            if self._stop_evt.is_set():
-                completed = False
             if not completed:
                 self.player.stop()
                 self.out(f"@{name}: …（被打断）")

@@ -68,7 +68,8 @@ def test_interruption_discards_future_cues():
     clock = [0.]
     stage = Stage()
     director = Performance(stage, now=lambda: clock[0])
-    director.start('Lucy', PerformedLine('我不知道', dict(target='Charlie', tone='hesitant')), 0, 9)
+    director.start('Lucy', PerformedLine('我不知道', dict(target='Charlie', tone='hesitant')), 0, 0.4)
+    assert ('look', 'Lucy', 1, True, True) in stage.commands
     director.stop()
     before = list(stage.commands)
     clock[0] = 8
@@ -136,7 +137,7 @@ async def test_audio_ack_gates_actions_and_failure_clears_them():
     assert stage.commands[-1] == 'STOP'
 
 
-def test_long_neutral_speech_changes_gaze_and_returns_without_moving_listeners():
+def test_long_neutral_speech_blinks_then_randomizes_gaze_without_moving_listeners():
     import random
     clock = [0.]
     stage = Stage()
@@ -148,8 +149,11 @@ def test_long_neutral_speech_changes_gaze_and_returns_without_moving_listeners()
     looks = [c for c in stage.commands if isinstance(c, tuple) and c[0] == 'look']
     assert len(looks) >= 4
     assert all(c[1] == 'Charlie' for c in looks)
-    assert looks[0][2] == looks[2][2] == 2
-    assert looks[1][2] != 2
+    assert looks[0] == ('look', 'Charlie', 2, True, False)
+    directions = [look[2] for look in looks]
+    assert set(directions) == set(range(9))
+    assert directions[2] != directions[0]  # No mandatory return to the addressee.
+    assert all(previous != current for previous, current in zip(directions, directions[1:]))
 
 
 def test_pause_stops_body_freezes_eye_timing_and_preserves_turn():
@@ -159,7 +163,7 @@ def test_pause_stops_body_freezes_eye_timing_and_preserves_turn():
     director = Performance(stage, now=lambda: clock[0], rng=random.Random(1))
     line = PerformedLine('一句。另一句。', dict(target='Lucy', tone='neutral'))
     director.start('Charlie', line, 0, 2)
-    clock[0] = 1
+    clock[0] = 0.25
     director.tick()
     director.pause()
     before = list(stage.commands)
@@ -173,6 +177,52 @@ def test_pause_stops_body_freezes_eye_timing_and_preserves_turn():
     assert len(looks) == 1  # next sentence does not restart the initial gaze
     director.stop()
     assert director.turn is None
+
+
+async def test_tts_recenters_only_after_last_sentence():
+    import numpy as np
+    from echo.mouth import TtsMouth
+
+    stage = Stage()
+
+    class Player:
+        def play(self, *args):
+            self.playing = True
+            stage.commands.append('play')
+        def busy(self):
+            playing, self.playing = self.playing, False
+            return playing
+
+    async def synth(*args):
+        return np.zeros(2400), 24000
+
+    mouth = TtsMouth(synth, Player(), {})
+    mouth.performance = Performance(stage)
+    line = PerformedLine('你好呀。再见啦。', dict(target='Charlie'))
+    assert await mouth.say('Lucy', line) == (line, True)
+    assert stage.commands.count('play') == 2
+    assert [command for command in stage.commands if command[0] == 'look'] == [
+        ('look', 'Lucy', 1, True, False),
+        ('look', 'Lucy', 0, False, True),
+    ]
+    assert stage.commands[-2:] == ['STOP', ('look', 'Lucy', 0, False, True)]
+
+
+def test_recenter_waits_until_the_eye_is_idle():
+    stage = Stage()
+    director = Performance(stage)
+    line = PerformedLine('你好', dict(target='Charlie'))
+    director.start('Lucy', line, 0, 1)
+    original_look = stage.look
+    stage.look = lambda *args: False
+    director.finish()
+    assert stage.commands[-1] == 'STOP'
+    stage.look = original_look
+    director.poll()
+    director.poll()
+    center = ('look', 'Lucy', 0, False, True)
+    assert stage.commands[-1] == center
+    assert stage.commands.count(center) == 1
 
 
 def test_busy_eyes_are_not_sent_another_command_but_body_keeps_running():

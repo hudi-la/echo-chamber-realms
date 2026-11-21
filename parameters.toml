@@ -233,8 +233,8 @@ short_sentence_chars = 2
 [system.eyes]
 busy_seconds = 3.0
 blink_probability = 0.35
-wait_min_seconds = 3.2
-wait_max_seconds = 4.8
+wait_min_seconds = 0.5
+wait_max_seconds = 1.0
 
 # 身体：lease_ms 用毫秒且不能超过现有固件上限 1200；renew_seconds 用秒。
 [system.body]
@@ -243,7 +243,7 @@ renew_seconds = 0.4
 
 # 串口与新动作控制器：端口和继电器电平在这里配置，空值保持未连接；不是旧 motors 配置。
 [system.serial]
-port = "/dev/cu.usbmodem31201"
+port = "/dev/cu.usbmodem31401"
 relay_active = "HIGH"
 baud = 115200
 read_chunk_bytes = 512

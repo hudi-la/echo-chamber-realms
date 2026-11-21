@@ -7,6 +7,11 @@ avoid_repeat_speaker = true    # 有其他候选时，上一个发言者让位
 ignore_own_speech_event = true # 自己说完不会立即作为新事件要求自己接话
 selection = "random"          # 可选 random 或 first；先按以上规则筛选，再选择
 
+[conversation.speaker_weights]  # 普通轮次的随机抽签权重
+Kaka = 2
+Charlie = 2
+Lucy = 1
+
 [characters]
 names = ["Charlie", "Lucy", "Kaka"]
 stage_left_to_right = ["Kaka", "Lucy", "Charlie"]  # 观众视角，决定左右方向
@@ -28,7 +33,7 @@ save_visitor_impressions = false
 [performance]
 body_during_speech = true       # 有实际音频播放时，程序持续续租身体动作；不由模型选择
 move_eyes = true
-avert_and_return = true         # 看向交谈对象后，间歇移开再返回
+random_gaze = true              # 开场看向交谈对象，随后随机换方向
 smooth_tones = ["hesitant"]
 tones = ["neutral", "curious", "hesitant", "emphatic", "excited"]
 audience_target = "audience"

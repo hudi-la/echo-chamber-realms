@@ -127,7 +127,7 @@ async def _play(directory, port, relay_active, countdown):
             if not completed:
                 raise RuntimeError('Playback interrupted')
             for _ in range(30):
-                stage.poll()
+                director.poll()
                 await asyncio.sleep(.05)
     finally:
         await mouth.stop()
