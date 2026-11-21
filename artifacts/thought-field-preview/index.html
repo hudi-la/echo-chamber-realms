@@ -203,11 +203,11 @@
   body.exhibition #stage { top:0!important;height:100dvh!important }
   body.exhibition .actor { top:auto!important;bottom:17%;pointer-events:none }
   #inner-thought { display:none }
-  body.exhibition #inner-thought:not([hidden]) { display:block;position:absolute;left:50%;top:46%;transform:translate(-50%,-50%);width:min(600px,82vw);box-sizing:border-box;padding:26px 30px;z-index:12;pointer-events:none;border:1px solid color-mix(in srgb,var(--thought-color) 45%,transparent);border-radius:18px;background:rgba(12,17,27,.72);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);box-shadow:0 12px 70px #0009;animation:thought-appear .6s ease-out }
-  #inner-thought h2 { margin:0 0 16px;font:500 18px/1.4 system-ui;color:var(--thought-color) }
-  #inner-thought p { margin:12px 0 0;color:#f0f2f6;font:400 clamp(18px,2vw,25px)/1.6 Georgia,"Songti SC",serif;white-space:pre-wrap;overflow-wrap:anywhere }
+  body.exhibition #inner-thought:not([hidden]) { display:block;position:absolute;left:50%;top:14%;transform:translate(-50%,0);width:min(1080px,88vw);box-sizing:border-box;padding:14px 24px;z-index:12;pointer-events:none;border:1px solid color-mix(in srgb,var(--thought-color) 28%,transparent);border-radius:12px;background:rgba(12,17,27,.30);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);box-shadow:0 8px 36px #0004;animation:thought-appear .6s ease-out }
+  #inner-thought h2 { margin:0 0 6px;font:500 13px/1.4 system-ui;color:var(--thought-color) }
+  #inner-thought p { margin:5px 0 0;color:#f0f2f6;font:400 clamp(14px,1.15vw,17px)/1.5 Georgia,"Songti SC",serif;white-space:pre-wrap;overflow-wrap:anywhere }
   #inner-thought p:empty { display:none }
-  @keyframes thought-appear { from { opacity:0;transform:translate(-50%,-46%) } to { opacity:1;transform:translate(-50%,-50%) } }
+  @keyframes thought-appear { from { opacity:0;transform:translate(-50%,6px) } to { opacity:1;transform:translate(-50%,0) } }
 
 .load-panel { position:absolute;left:50%;top:14%;transform:translateX(-50%);display:flex;align-items:center;gap:8px;font:10px system-ui;color:#7c7066;z-index:5;white-space:nowrap }
 .load-panel button { border:1px solid #d1c7bd;background:transparent;color:#65574e;border-radius:14px;padding:5px 10px;cursor:pointer }.load-panel button[aria-pressed="true"] { background:#4c4037;color:#fff }.load-meter { margin-left:8px;font-variant-numeric:tabular-nums }
@@ -233,7 +233,7 @@ body.exhibition .preview-debug-tools { display:none!important }
 <svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs><filter id="portrait-ink" color-interpolation-filters="sRGB"><feColorMatrix type="matrix" values="0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  -.333 -.333 -.333 0 1"/><feComposite in2="SourceGraphic" operator="in"/></filter></defs></svg>
 <header>
   <strong class="brand">回音室 <span style="font-size:10px;opacity:.6">ECHO CHAMBER REALMS</span></strong>
-  <nav class="view-switch" aria-label="视图"><button id="debug-view" aria-pressed="true">调试</button><button id="exhibition-view" aria-pressed="false">展厅</button></nav>
+  <nav class="view-switch" aria-label="视图"><button id="debug-view" aria-pressed="true">调试</button><button id="exhibition-view" aria-pressed="false">打开独立展厅窗口</button></nav>
   <button id="fullscreen">开全屏</button>
   <a class="telemetry" href="/voice-preview/index.html" target="_blank" rel="noopener" style="color:var(--dim)">声音试听 · 原版 / 卡通版</a>
   <span class="telemetry">第 <b id="day">–</b> 天</span>
@@ -829,7 +829,7 @@ body.exhibition .preview-debug-tools { display:none!important }
     },
     update(snapshot){
       if(snapshot.run_id && snapshot.run_id!==runId){
-        runId=snapshot.run_id;pendingSpeech=null;
+        runId=snapshot.run_id;canvas.dataset.runId=runId;pendingSpeech=null;
         clearTimeout(thoughtTimer);thoughtTimer=null;thoughtQueue.length=0;shownThoughts.clear();
         if(thoughtCard)thoughtCard.hidden=true;
         states.forEach(state=>{state.signature='';state.notes=[];});
@@ -862,6 +862,11 @@ body.exhibition .preview-debug-tools { display:none!important }
   const $ = id => document.getElementById(id);
   const NAMES = ["Charlie", "Lucy", "Kaka"];
   let latestStatus = null, selectedActor = null;
+  const exhibitionWindow = location.pathname === '/exhibition';
+  const displayOnly = exhibitionWindow || new URLSearchParams(location.search).get("display") === "1";
+  function openExhibition() {
+    window.open('/exhibition', 'echo-exhibition', 'popup=yes,width=1280,height=800,resizable=yes,scrollbars=no');
+  }
   function setView(mode) {
     document.body.classList.toggle("exhibition", mode === "exhibition");
     $("debug-view").setAttribute("aria-pressed", mode !== "exhibition");
@@ -869,14 +874,15 @@ body.exhibition .preview-debug-tools { display:none!important }
     history.replaceState(null, "", "#" + mode);
   }
   $("debug-view").onclick = () => setView("debug");
-  $("exhibition-view").onclick = () => setView("exhibition");
+  $("exhibition-view").onclick = openExhibition;
   $("fullscreen").onclick = async () => { try { document.fullscreenElement ? await document.exitFullscreen() : await document.documentElement.requestFullscreen(); } catch(e) { $("fullscreen").textContent = "请使用浏览器全屏"; } };
   $("filter").onchange = () => { feed.dataset.filter = $("filter").value; };
   document.addEventListener("fullscreenchange", () => { $("fullscreen").textContent = document.fullscreenElement ? "退出全屏" : "开全屏"; });
-  setView(location.hash === "#exhibition" ? "exhibition" : "debug");
+  setView(exhibitionWindow || location.hash === "#exhibition" ? "exhibition" : "debug");
+  document.title = exhibitionWindow ? "Echo Chamber Realms · Exhibition" : "Echo Chamber Realms · Console";
   document.addEventListener("keydown", e => {
     if (e.target.closest("input,textarea,select") || e.metaKey || e.ctrlKey || e.altKey) return;
-    if (e.key.toLowerCase() === "d") setView(document.body.classList.contains("exhibition") ? "debug" : "exhibition");
+    if (!exhibitionWindow && e.key.toLowerCase() === "d") setView(document.body.classList.contains("exhibition") ? "debug" : "exhibition");
     if (e.key.toLowerCase() === "f") $("fullscreen").click();
   });
   function detail() {
@@ -1160,7 +1166,6 @@ body.exhibition .preview-debug-tools { display:none!important }
     soundOn().catch(() => { $("sound").textContent = "声音：点击开启"; });
     if (audio.ctx && audio.ctx.state !== "running") $("sound").textContent = "声音：点击开启";
   }
-  const displayOnly = new URLSearchParams(location.search).get("display") === "1";
   if (!displayOnly) defaultSound();
   function unlockSound(e) {
     if (displayOnly || e.target.closest("#sound, #audio, #mic")) return;

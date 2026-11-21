@@ -4,6 +4,7 @@
 from .settings import parameter, parameters, rule
 import asyncio
 import json
+import hashlib
 from uuid import uuid4
 from pathlib import Path
 from typing import Iterable
@@ -143,7 +144,13 @@ class Monitor:
 
     async def _index(self, request):
         from aiohttp import web
-        return web.Response(text=PAGE.read_text(encoding="utf-8"), content_type="text/html")
+        html = PAGE.read_text(encoding="utf-8")
+        # Content-based URLs prevent an old cached renderer from bypassing run filtering.
+        for asset in (PAGE.parent / "static").glob("*.js"):
+            version = hashlib.sha256(asset.read_bytes()).hexdigest()[:12]
+            html = html.replace(f'/static/{asset.name}"', f'/static/{asset.name}?v={version}"')
+        return web.Response(text=html, content_type="text/html",
+                            headers={"Cache-Control": "no-store"})
 
     async def _ws(self, request):
         from aiohttp import web
@@ -197,6 +204,8 @@ class Monitor:
         from aiohttp import web
         app = web.Application()
         app.router.add_get("/", self._index)
+        app.router.add_get("/console", self._index)
+        app.router.add_get("/exhibition", self._index)
         app.router.add_get("/ws", self._ws)
         app.router.add_static("/static/", PAGE.parent / "static", show_index=False)
         app.router.add_get("/favicon.ico", lambda request: web.Response(status=204))
@@ -209,5 +218,6 @@ class Monitor:
         runner = web.AppRunner(app, access_log=None)
         await runner.setup()
         await web.TCPSite(runner, self.host, self.port).start()
-        print(f"监控台：http://{self.host}:{self.port}")
+        print(f"控制台：http://{self.host}:{self.port}/console")
+        print(f"展厅视觉：http://{self.host}:{self.port}/exhibition")
         return [asyncio.create_task(self._pump()), asyncio.create_task(self._tick())]

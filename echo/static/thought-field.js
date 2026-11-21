@@ -361,7 +361,7 @@
     },
     update(snapshot){
       if(snapshot.run_id && snapshot.run_id!==runId){
-        runId=snapshot.run_id;pendingSpeech=null;
+        runId=snapshot.run_id;canvas.dataset.runId=runId;pendingSpeech=null;
         clearTimeout(thoughtTimer);thoughtTimer=null;thoughtQueue.length=0;shownThoughts.clear();
         if(thoughtCard)thoughtCard.hidden=true;
         states.forEach(state=>{state.signature='';state.notes=[];});
